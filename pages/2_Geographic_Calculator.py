@@ -8,29 +8,32 @@ import plotly.express as px
 
 st.set_page_config(page_title="Geographic Calculator", layout="wide")
 
+# Initialize session state
 if 'geo_data' not in st.session_state:
     st.session_state.geo_data = {}
 if 'pdf_extracted' not in st.session_state:
     st.session_state.pdf_extracted = {}
 if 'predictions' not in st.session_state:
     st.session_state.predictions = {}
-if 'waste_monitoring' not in st.session_state:
-    st.session_state.waste_monitoring = {}
 
 st.title("Geographic Energy Calculator")
 st.markdown("*Map-based renewable energy potential analysis*")
 
+# Sidebar: Input Method
 st.sidebar.header("Location Input")
 input_method = st.sidebar.radio(
     "Choose input method:",
     ["Manual Entry", "Click on Map", "Use PDF Data", "Batch Analysis (CSV)"]
 )
 
+# Main Content
 tab1, tab2, tab3, tab4 = st.tabs(["Calculate", "Map View", "Analysis", "Export"])
 
+# TAB 2: MAP VIEW (moved before Calculate tab to handle clicks first)
 with tab2:
     st.header("Interactive Location Map")
     
+    # Get current location for map center
     if st.session_state.geo_data:
         map_lat = st.session_state.geo_data.get('latitude', 23.8103)
         map_lng = st.session_state.geo_data.get('longitude', 90.4125)
@@ -76,26 +79,32 @@ with tab2:
     st.markdown("**Click on the map to select a new location**")
     map_data = st_folium(m, width=700, height=500, key="main_map")
     
+    # Handle map clicks
     if map_data and map_data.get('last_clicked'):
         clicked_lat = map_data['last_clicked']['lat']
         clicked_lng = map_data['last_clicked']['lng']
         
+        # Store clicked coordinates
         st.session_state.geo_data['clicked_lat'] = clicked_lat
         st.session_state.geo_data['clicked_lng'] = clicked_lng
         
         st.success(f"New location selected: {clicked_lat:.4f}, {clicked_lng:.4f}")
-        st.info("👈 Go to the 'Calculate' tab and select 'Click on Map' input method to use these coordinates!")
+        st.info("Go to the 'Calculate' tab and select 'Click on Map' input method to use these coordinates.")
 
+# TAB 1: CALCULATE
 with tab1:
     st.header("Energy Potential Calculator")
     
+    # Alert user if map coordinates are available but not being used
     if 'clicked_lat' in st.session_state.geo_data and 'clicked_lng' in st.session_state.geo_data:
         if input_method != "Click on Map":
-            st.warning(f"📍 You have selected coordinates on the map ({st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}). Change input method to 'Click on Map' in the sidebar to use them!")
+            st.warning(f"Map coordinates available: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}. Change input method to 'Click on Map' in the sidebar to use them.")
     
+    # Determine default values based on input method (only for initial setup)
     if input_method == "Use PDF Data" and st.session_state.pdf_extracted:
-        st.success("📄 Using data from PDF Analyzer")
+        st.success("Using data from PDF Analyzer")
         
+        # Pre-fill with PDF data
         initial_latitude = float(st.session_state.pdf_extracted.get('latitude', 23.8103))
         initial_longitude = float(st.session_state.pdf_extracted.get('longitude', 90.4125))
         initial_waterfall_height = float(st.session_state.pdf_extracted.get('waterfall_height', 0.0))
@@ -115,12 +124,13 @@ with tab1:
         initial_location_name = "Default Location"
         
     elif input_method == "Click on Map":
+        # Check if user has clicked on map
         if 'clicked_lat' in st.session_state.geo_data and 'clicked_lng' in st.session_state.geo_data:
-            st.success(f"🗺️ Using map location: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}")
+            st.success(f"Using map location: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}")
             initial_latitude = float(st.session_state.geo_data['clicked_lat'])
             initial_longitude = float(st.session_state.geo_data['clicked_lng'])
         else:
-            st.info("👉 Go to the 'Map View' tab to click on a location first!")
+            st.info("Go to the 'Map View' tab to click on a location first.")
             initial_latitude = 23.8103
             initial_longitude = 90.4125
         
@@ -140,7 +150,7 @@ with tab1:
         initial_depth = 3.0
         initial_location_name = "Batch Location"
         
-    else:
+    else:  # Manual Entry
         initial_latitude = 23.8103
         initial_longitude = 90.4125
         initial_waterfall_height = 50.0
@@ -149,6 +159,7 @@ with tab1:
         initial_depth = 3.0
         initial_location_name = "My Location"
     
+    # Initialize form data in session state if not exists (use initial values only once)
     if 'form_latitude' not in st.session_state:
         st.session_state.form_latitude = initial_latitude
     if 'form_longitude' not in st.session_state:
@@ -162,10 +173,12 @@ with tab1:
     if 'form_depth' not in st.session_state:
         st.session_state.form_depth = initial_depth
     
+    # Update ONLY coordinates when input method changes to "Click on Map"
     if input_method == "Click on Map" and 'clicked_lat' in st.session_state.geo_data:
         st.session_state.form_latitude = float(st.session_state.geo_data['clicked_lat'])
         st.session_state.form_longitude = float(st.session_state.geo_data['clicked_lng'])
     
+    # Update ALL values when input method changes to "Use PDF Data"
     if input_method == "Use PDF Data" and st.session_state.pdf_extracted:
         st.session_state.form_latitude = initial_latitude
         st.session_state.form_longitude = initial_longitude
@@ -174,7 +187,11 @@ with tab1:
         st.session_state.form_geo_temp = initial_geo_temp
         st.session_state.form_depth = initial_depth
     
-    location_name = st.text_input("Location Name", value=initial_location_name)
+    # Input fields with session state
+    location_name = st.text_input("Location Name", value=initial_location_name, help="Enter a descriptive name for this location")
+    
+    if not location_name or location_name.strip() == "":
+        st.caption("Warning: Location name is required")
     
     col1, col2 = st.columns(2)
     
@@ -186,7 +203,8 @@ with tab1:
             value=st.session_state.form_latitude, 
             step=0.0001, 
             format="%.4f",
-            key="latitude_input"
+            key="latitude_input",
+            help="Valid range: -90 to +90 (South to North)"
         )
         st.session_state.form_latitude = latitude
         
@@ -195,9 +213,13 @@ with tab1:
             min_value=0.0, 
             value=st.session_state.form_waterfall_height, 
             step=5.0,
-            key="waterfall_height_input"
+            key="waterfall_height_input",
+            help="Height of waterfall in meters. Leave at 0 if no waterfall."
         )
         st.session_state.form_waterfall_height = waterfall_height
+        
+        if waterfall_height > 500:
+            st.caption("Warning: Very high waterfall - please verify")
         
         geo_temp = st.number_input(
             "Geothermal Temperature (°C)", 
@@ -205,9 +227,15 @@ with tab1:
             max_value=900.0, 
             value=st.session_state.form_geo_temp, 
             step=10.0,
-            key="geo_temp_input"
+            key="geo_temp_input",
+            help="Underground temperature in Celsius. Minimum 50°C for viable generation."
         )
         st.session_state.form_geo_temp = geo_temp
+        
+        if geo_temp > 0 and geo_temp < 50:
+            st.caption("Warning: Temperature too low for efficient energy generation")
+        elif geo_temp > 600:
+            st.caption("Warning: Extremely high temperature - specialized equipment required")
     
     with col2:
         longitude = st.number_input(
@@ -217,7 +245,8 @@ with tab1:
             value=st.session_state.form_longitude, 
             step=0.0001, 
             format="%.4f",
-            key="longitude_input"
+            key="longitude_input",
+            help="Valid range: -180 to +180 (West to East)"
         )
         st.session_state.form_longitude = longitude
         
@@ -226,9 +255,13 @@ with tab1:
             min_value=0.0, 
             value=st.session_state.form_waterfall_flow, 
             step=0.5,
-            key="waterfall_flow_input"
+            key="waterfall_flow_input",
+            help="Water flow in cubic meters per second. Leave at 0 if no waterfall."
         )
         st.session_state.form_waterfall_flow = waterfall_flow
+        
+        if waterfall_flow > 1000:
+            st.caption("Warning: Very high flow rate - please verify")
         
         depth = st.number_input(
             "Drilling Depth (km)", 
@@ -236,12 +269,41 @@ with tab1:
             max_value=10.0, 
             value=st.session_state.form_depth, 
             step=0.5,
-            key="depth_input"
+            key="depth_input",
+            help="Geothermal drilling depth in kilometers. Typical range: 1-5 km"
         )
         st.session_state.form_depth = depth
+        
+        if depth > 7:
+            st.caption("Warning: Very deep drilling - higher costs expected")
+    
+    # Real-time validation summary
+    st.markdown("---")
+    
+    validation_summary = []
+    if waterfall_height > 0 or waterfall_flow > 0:
+        if waterfall_height > 0 and waterfall_flow > 0:
+            validation_summary.append("VALID: Waterfall data complete")
+        else:
+            validation_summary.append("WARNING: Waterfall data incomplete (need both height and flow)")
+    
+    if geo_temp >= 50:
+        validation_summary.append("VALID: Geothermal data viable")
+    elif geo_temp > 0:
+        validation_summary.append("WARNING: Geothermal temperature too low")
+    
+    if not validation_summary:
+        st.info("No energy source data entered yet")
+    else:
+        for summary in validation_summary:
+            if summary.startswith("VALID"):
+                st.success(summary)
+            else:
+                st.warning(summary)
     
     st.markdown("---")
     
+    # Additional parameters
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -251,15 +313,78 @@ with tab1:
     with col3:
         capacity_factor = st.slider("Capacity Factor", 0.5, 0.95, 0.85, 0.01)
     
+    # CALCULATIONS WITH VALIDATION
     if st.button("Calculate Energy Potential", type="primary"):
+        
+        # INPUT VALIDATION
+        validation_errors = []
+        
+        # Validate location name
+        if not location_name or location_name.strip() == "":
+            validation_errors.append("ERROR: Location name cannot be empty")
+        
+        # Validate coordinates
+        if latitude == 0 and longitude == 0:
+            validation_errors.append("WARNING: Coordinates are at (0, 0). Please verify this is correct.")
+        
+        # Validate waterfall data
+        if waterfall_height > 0 and waterfall_flow == 0:
+            validation_errors.append("ERROR: Waterfall height is set but flow rate is 0. Both must be greater than 0 for waterfall calculations.")
+        
+        if waterfall_flow > 0 and waterfall_height == 0:
+            validation_errors.append("ERROR: Flow rate is set but waterfall height is 0. Both must be greater than 0 for waterfall calculations.")
+        
+        if waterfall_height > 500:
+            validation_errors.append("WARNING: Waterfall height exceeds 500m. This is extremely high - please verify.")
+        
+        if waterfall_flow > 1000:
+            validation_errors.append("WARNING: Flow rate exceeds 1000 m³/s. This is extremely high - please verify.")
+        
+        # Validate geothermal data
+        if geo_temp > 0 and geo_temp < 50:
+            validation_errors.append("WARNING: Geothermal temperature below 50°C is too low for efficient energy generation.")
+        
+        if geo_temp > 600:
+            validation_errors.append("WARNING: Temperature exceeds 600°C. This requires specialized equipment and safety measures.")
+        
+        if depth > 10:
+            validation_errors.append("WARNING: Drilling depth exceeds 10 km. This is beyond typical geothermal project limits.")
+        
+        if depth < 1 and geo_temp > 100:
+            validation_errors.append("WARNING: High temperature at shallow depth is unusual. Please verify data.")
+        
+        # Validate that at least one energy source is viable
+        if waterfall_height == 0 and waterfall_flow == 0 and (geo_temp == 0 or geo_temp < 50):
+            validation_errors.append("ERROR: No viable energy source detected. Please enter either waterfall data or geothermal data (temp > 50°C).")
+        
+        # Display validation errors/warnings
+        if validation_errors:
+            st.error("### Validation Issues Found:")
+            for error in validation_errors:
+                if error.startswith("ERROR"):
+                    st.error(error)
+                else:
+                    st.warning(error)
+            
+            # Check if there are critical errors (marked with ERROR)
+            critical_errors = [e for e in validation_errors if e.startswith("ERROR")]
+            if critical_errors:
+                st.error("**Cannot proceed with calculation. Please fix the errors above.**")
+                st.stop()  # Stop execution
+            else:
+                # Only warnings - ask for confirmation
+                if not st.checkbox("I acknowledge the warnings above and want to proceed with calculation"):
+                    st.stop()
         
         with st.spinner("Calculating..."):
             
+            # Constants
             rho = 1000
             g = 9.81
             specific_heat = 4.18
             surface_temp = 25
             
+            # WATERFALL CALCULATIONS
             if waterfall_height > 0 and waterfall_flow > 0:
                 P_waterfall_watts = rho * g * waterfall_flow * waterfall_height * turbine_efficiency
                 P_waterfall_MW = P_waterfall_watts / 1_000_000
@@ -272,6 +397,7 @@ with tab1:
                 households_waterfall = 0
                 has_waterfall = False
             
+            # GEOTHERMAL CALCULATIONS
             if geo_temp > 50 and depth > 0:
                 flow_rate_geo = 50.0
                 temp_diff = geo_temp - surface_temp
@@ -300,21 +426,38 @@ with tab1:
                 relative_cost = 0
                 has_geothermal = False
             
-            E_base_total_MWh = E_waterfall_year_MWh + E_geo_year_MWh
+            # WASTE ENERGY RECOVERY (Continuous Second Line - Always ON)
+            # This system runs independently, continuously capturing waste heat and mechanical losses
+            # It operates regardless of main system output levels
             
-            waste_rate = 0.30
-            recovery_efficiency = 0.80
+            # Base waste sources that are always present:
+            base_waste_sources = 0  # kWh/year from ambient losses
             
-            E_total_wasted_MWh = E_base_total_MWh * waste_rate
-            E_waste_recovered_MWh = E_total_wasted_MWh * recovery_efficiency
-            E_waste_unrecovered_MWh = E_total_wasted_MWh * (1 - recovery_efficiency)
+            # Waterfall turbine waste (friction, heat, vibration)
+            if has_waterfall:
+                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.30  # 30% of output becomes waste
+                base_waste_sources += waterfall_waste
+            
+            # Geothermal system waste (heat dissipation, pump losses)
+            if has_geothermal:
+                geothermal_waste = E_geo_year_MWh * 1000 * 0.30  # 30% waste from geothermal
+                base_waste_sources += geothermal_waste
+            
+            # Continuous recovery system (Second Line - 80% recovery efficiency)
+            waste_recovered_kWh = base_waste_sources * 0.80  # Always capturing 80% of waste
+            waste_remaining_kWh = base_waste_sources * 0.20  # 20% reserved for system stability
+            
+            E_waste_recovered_MWh = waste_recovered_kWh / 1000
+            E_waste_remaining_MWh = waste_remaining_kWh / 1000
             
             households_waste = int(E_waste_recovered_MWh * 1000 / 7.2)
             
+            # TOTALS
             P_total_MW = P_waterfall_MW + P_geo_MW
             E_total_year_MWh = E_waterfall_year_MWh + E_geo_year_MWh + E_waste_recovered_MWh
             households_total = int(E_total_year_MWh * 1000 / 7.2)
             
+            # STORE IN SESSION STATE
             st.session_state.geo_data = {
                 'location_name': location_name,
                 'latitude': latitude,
@@ -329,6 +472,8 @@ with tab1:
                 'E_waterfall_year_MWh': E_waterfall_year_MWh,
                 'E_geo_year_MWh': E_geo_year_MWh,
                 'E_waste_recovered_MWh': E_waste_recovered_MWh,
+                'E_waste_remaining_MWh': E_waste_remaining_MWh,
+                'base_waste_sources': base_waste_sources / 1000,  # Convert to MWh for storage
                 'E_total_year_MWh': E_total_year_MWh,
                 'households_total': households_total,
                 'pipe_material': pipe_material,
@@ -336,22 +481,12 @@ with tab1:
                 'has_geothermal': has_geothermal
             }
             
-            st.session_state.waste_monitoring = {
-                'total_energy_generated_MWh': E_base_total_MWh,
-                'total_wasted_MWh': E_total_wasted_MWh,
-                'waste_recovered_MWh': E_waste_recovered_MWh,
-                'waste_unrecovered_MWh': E_waste_unrecovered_MWh,
-                'waste_rate_percent': waste_rate * 100,
-                'recovery_efficiency_percent': recovery_efficiency * 100,
-                'households_from_waste': households_waste,
-                'continuous_recovery_active': True
-            }
-            
             st.session_state.predictions['waterfall_mw'] = P_waterfall_MW
             st.session_state.predictions['geo_mw'] = P_geo_MW
             st.session_state.predictions['total_annual_mwh'] = E_total_year_MWh
             st.session_state.predictions['location'] = location_name
             
+        # DISPLAY RESULTS
         st.success("Calculation Complete!")
         
         st.markdown("### Total System Output")
@@ -369,29 +504,15 @@ with tab1:
         
         st.markdown("---")
         
-        st.markdown("### Continuous Waste Recovery System")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Total Energy Wasted", f"{E_total_wasted_MWh:,.0f} MWh/year")
-            st.caption(f"({waste_rate*100:.0f}% of generation)")
-        with col2:
-            st.metric("Energy Recovered", f"{E_waste_recovered_MWh:,.0f} MWh/year", delta="Always Active")
-            st.caption(f"({recovery_efficiency*100:.0f}% recovery efficiency)")
-        with col3:
-            st.metric("Additional Households", f"{households_waste:,}")
-            st.caption("Powered by waste recovery")
-        
-        st.info("🔄 **Continuous Recovery Active**: This system runs 24/7 independently, capturing wasted energy from system losses, heat dissipation, and inefficiencies.")
-        
-        st.markdown("---")
-        
+        # Breakdown
         st.markdown("### Energy Source Breakdown")
+        
+        st.info("**Waste Recovery System:** Operates continuously and independently from main generation systems, capturing 80% of thermal and mechanical losses.")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            if has_waterfall or has_geothermal or E_waste_recovered_MWh > 0:
+            if has_waterfall or has_geothermal:
                 labels = []
                 values = []
                 colors = []
@@ -475,18 +596,19 @@ with tab1:
                 st.write(f"- **Relative Cost Factor:** {relative_cost}x")
                 st.markdown("---")
             
-            st.markdown("#### Continuous Waste Energy Recovery")
-            st.write(f"- Base Generation: {E_base_total_MWh:,.0f} MWh/year")
-            st.write(f"- Estimated Waste Rate: {waste_rate*100:.0f}%")
-            st.write(f"- Total Wasted: {E_total_wasted_MWh:,.0f} MWh/year")
-            st.write(f"- Recovery Efficiency: {recovery_efficiency*100:.0f}%")
-            st.write(f"- **Recovered Energy: {E_waste_recovered_MWh:,.0f} MWh/year**")
-            st.write(f"- **Unrecovered Losses: {E_waste_unrecovered_MWh:,.0f} MWh/year**")
-            st.write(f"- **Additional Households: {households_waste:,}**")
-            st.info("This system operates continuously and independently from primary generation sources.")
+            if E_waste_recovered_MWh > 0:
+                st.markdown("#### Continuous Waste Energy Recovery (Second Line)")
+                st.write("**System Type:** Always-ON independent recovery")
+                st.write(f"- **Total Waste Available:** {base_waste_sources / 1000:,.2f} MWh/year (30% of main output)")
+                st.write(f"- **Recovery Efficiency:** 80% continuous capture")
+                st.write(f"- **Recovered Energy:** {E_waste_recovered_MWh:,.2f} MWh/year")
+                st.write(f"- **System Reserve:** {E_waste_remaining_MWh:,.2f} MWh/year (20% for stability)")
+                st.write(f"- **Additional Households Powered:** {households_waste:,}")
+                st.info("**Note:** This recovery system operates continuously and independently, capturing waste heat, friction losses, and mechanical inefficiencies from the primary generation systems.")
         
-        st.success("✅ Data saved and ready for Energy Monitor and Time-Series Predictor")
+        st.success("Data saved and sent to Time-Series Predictor")
 
+# TAB 3: ANALYSIS
 with tab3:
     st.header("Geographic Energy Analysis")
     
@@ -498,7 +620,7 @@ with tab3:
         
         with col1:
             if st.session_state.geo_data.get('has_waterfall'):
-                st.success("✅ Waterfall Turbine System")
+                st.success("Waterfall Turbine System")
                 st.write("**Recommended Installation:**")
                 st.write("- Install turbines at the base of waterfall")
                 st.write("- Use adjustable blade systems for flow variation")
@@ -515,7 +637,7 @@ with tab3:
         
         with col2:
             if st.session_state.geo_data.get('has_geothermal'):
-                st.success("✅ Geothermal System")
+                st.success("Geothermal System")
                 st.write("**Recommended Installation:**")
                 st.write(f"- Drill to {st.session_state.geo_data.get('depth', 0)} km depth")
                 st.write(f"- Use {st.session_state.geo_data.get('pipe_material', 'N/A')}")
@@ -685,12 +807,12 @@ with tab3:
         - More predictable output (not weather dependent)
         - Smaller land footprint
         - Lower intermittency
-        - Continuous waste recovery adds extra power
         """)
         
     else:
         st.warning("No calculation data available. Please go to the 'Calculate' tab first!")
 
+# TAB 4: EXPORT
 with tab4:
     st.header("Export & Batch Analysis")
     
@@ -703,7 +825,6 @@ with tab4:
             'Longitude': [st.session_state.geo_data.get('longitude', 0)],
             'Waterfall Power (MW)': [st.session_state.geo_data.get('P_waterfall_MW', 0)],
             'Geothermal Power (MW)': [st.session_state.geo_data.get('P_geo_MW', 0)],
-            'Waste Recovery (MWh/year)': [st.session_state.geo_data.get('E_waste_recovered_MWh', 0)],
             'Total Power (MW)': [st.session_state.geo_data.get('P_total_MW', 0)],
             'Annual Energy (MWh)': [st.session_state.geo_data.get('E_total_year_MWh', 0)],
             'Households Powered': [st.session_state.geo_data.get('households_total', 0)],
@@ -792,22 +913,26 @@ with tab4:
                     if h > 0 and q > 0:
                         p_waterfall = (1000 * 9.81 * q * h * 0.9) / 1_000_000
                         e_waterfall = p_waterfall * 24 * 365
+                        waterfall_waste = e_waterfall * 1000 * 0.30
                     else:
                         p_waterfall = 0
                         e_waterfall = 0
+                        waterfall_waste = 0
                     
                     if temp > 50:
                         p_geo = (50 * 4.18 * (temp - 25) * 0.15) / 1000
                         e_geo = p_geo * 24 * 365 * 0.85
+                        geothermal_waste = e_geo * 1000 * 0.30
                     else:
                         p_geo = 0
                         e_geo = 0
+                        geothermal_waste = 0
                     
-                    e_base = e_waterfall + e_geo
-                    e_wasted = e_base * 0.30
-                    e_recovered = e_wasted * 0.80
+                    # Continuous waste recovery (Second Line - always ON)
+                    total_waste = waterfall_waste + geothermal_waste
+                    e_waste_recovered = (total_waste * 0.80) / 1000  # 80% recovery
                     
-                    total_annual = e_waterfall + e_geo + e_recovered
+                    total_annual = e_waterfall + e_geo + e_waste_recovered
                     households = int(total_annual * 1000 / 7.2)
                     
                     if temp < 300:
@@ -823,7 +948,6 @@ with tab4:
                         'Longitude': lng,
                         'Waterfall_MW': round(p_waterfall, 2),
                         'Geothermal_MW': round(p_geo, 2),
-                        'Waste_Recovery_MWh': round(e_recovered, 0),
                         'Total_Annual_MWh': round(total_annual, 0),
                         'Households': households,
                         'Pipe_Material': material if temp > 50 else 'N/A'
@@ -881,4 +1005,4 @@ with tab4:
 
 st.markdown("---")
 st.markdown("Community Energy Toolkit")
-st.caption("Data ready for Energy Monitor and Time-Series Predictor")
+st.caption("Data ready for Time-Series Prediction and Energy Monitor")
