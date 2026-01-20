@@ -202,28 +202,121 @@ if uploaded_file is not None:
                 break
         
         if coords_found:
-            st.success(f" Coordinates detected: {default_lat}, {default_lon}")
+            st.success(f"Coordinates detected: {default_lat}, {default_lon}")
         else:
             st.info("Coordinates not auto-detected. Using default Bangladesh location.")
         
+        # Validate extracted coordinates
+        if coords_found:
+            if default_lat < -90 or default_lat > 90:
+                st.error(f"ERROR: Invalid latitude {default_lat}. Must be between -90 and 90.")
+                default_lat = 23.8103
+            if default_lon < -180 or default_lon > 180:
+                st.error(f"ERROR: Invalid longitude {default_lon}. Must be between -180 and 180.")
+                default_lon = 90.4125
+        
         location_name = st.text_input("Location Name", value="Extracted Location")
+        
+        if not location_name or location_name.strip() == "":
+            st.caption("Warning: Location name is required")
+        
         extracted_data['location_name'] = location_name
         
         col1, col2 = st.columns(2)
         with col1:
-            lat_input = st.number_input("Latitude", min_value=-90.0, max_value=90.0, value=default_lat, step=0.0001, format="%.4f")
+            lat_input = st.number_input("Latitude", min_value=-90.0, max_value=90.0, value=default_lat, step=0.0001, format="%.4f", help="Valid range: -90 to +90")
             extracted_data['latitude'] = lat_input
         with col2:
-            lng_input = st.number_input("Longitude", min_value=-180.0, max_value=180.0, value=default_lon, step=0.0001, format="%.4f")
+            lng_input = st.number_input("Longitude", min_value=-180.0, max_value=180.0, value=default_lon, step=0.0001, format="%.4f", help="Valid range: -180 to +180")
             extracted_data['longitude'] = lng_input
+        
+        # Validation Summary
+        st.markdown("---")
+        st.subheader("Data Validation Summary")
+        
+        validation_messages = []
+        
+        # Validate waterfall data
+        if waterfall_flow > 0 and waterfall_height > 0:
+            validation_messages.append(("VALID", "Waterfall data complete"))
+        elif waterfall_flow > 0 or waterfall_height > 0:
+            validation_messages.append(("WARNING", "Incomplete waterfall data - both height and flow required"))
+        
+        if waterfall_height > 500:
+            validation_messages.append(("WARNING", f"Waterfall height ({waterfall_height}m) is extremely high - verify accuracy"))
+        
+        if waterfall_flow > 1000:
+            validation_messages.append(("WARNING", f"Flow rate ({waterfall_flow} m³/s) is extremely high - verify accuracy"))
+        
+        # Validate geothermal data
+        if extracted_data.get('geo_temp', 0) >= 50:
+            validation_messages.append(("VALID", "Geothermal temperature viable for generation"))
+        elif extracted_data.get('geo_temp', 0) > 0:
+            validation_messages.append(("WARNING", f"Geothermal temperature ({extracted_data.get('geo_temp')}°C) below 50°C - too low for efficient generation"))
+        
+        if extracted_data.get('geo_temp', 0) > 600:
+            validation_messages.append(("WARNING", f"Temperature ({extracted_data.get('geo_temp')}°C) exceeds 600°C - requires specialized equipment"))
+        
+        if extracted_data.get('depth', 0) > 7:
+            validation_messages.append(("WARNING", f"Drilling depth ({extracted_data.get('depth')} km) is very deep - expect high costs"))
+        
+        # Check for at least one viable energy source
+        has_waterfall = waterfall_flow > 0 and waterfall_height > 0
+        has_geothermal = extracted_data.get('geo_temp', 0) >= 50
+        
+        if not has_waterfall and not has_geothermal:
+            validation_messages.append(("ERROR", "No viable energy source detected in document"))
+        
+        # Display validation messages
+        if validation_messages:
+            for msg_type, msg in validation_messages:
+                if msg_type == "VALID":
+                    st.success(msg)
+                elif msg_type == "WARNING":
+                    st.warning(msg)
+                elif msg_type == "ERROR":
+                    st.error(msg)
+        else:
+            st.info("No data extracted from document")
         
         st.markdown("---")
         
         if st.button("Send Data to Geographic Calculator", type="primary"):
+            # Final validation before sending
+            validation_errors = []
+            
+            if not extracted_data.get('location_name') or extracted_data.get('location_name', '').strip() == "":
+                validation_errors.append("ERROR: Location name is required")
+            
+            has_waterfall = extracted_data.get('waterfall_flow', 0) > 0 and extracted_data.get('waterfall_height', 0) > 0
+            has_geothermal = extracted_data.get('geo_temp', 0) >= 50
+            
+            if not has_waterfall and not has_geothermal:
+                validation_errors.append("ERROR: No viable energy source. Document must contain either waterfall data or geothermal data with temperature ≥ 50°C")
+            
+            # Check for mismatched waterfall data
+            if (extracted_data.get('waterfall_flow', 0) > 0 and extracted_data.get('waterfall_height', 0) == 0) or \
+               (extracted_data.get('waterfall_flow', 0) == 0 and extracted_data.get('waterfall_height', 0) > 0):
+                validation_errors.append("WARNING: Incomplete waterfall data - both height and flow are required")
+            
+            if validation_errors:
+                st.error("### Cannot Send Data - Validation Failed:")
+                for error in validation_errors:
+                    if error.startswith("ERROR"):
+                        st.error(error)
+                    else:
+                        st.warning(error)
+                
+                critical_errors = [e for e in validation_errors if e.startswith("ERROR")]
+                if critical_errors:
+                    st.error("Please correct the errors above before sending data to the calculator.")
+                    st.stop()
+            
+            # If validation passes, send data
             st.session_state.pdf_extracted = extracted_data
             st.session_state.geo_data['pdf_source'] = uploaded_file.name
             
-            st.success(" Data extracted and sent to Geographic Calculator!")
+            st.success("Data extracted and sent to Geographic Calculator!")
             
             st.markdown("### Extracted Summary")
             summary_df = pd.DataFrame([{
@@ -258,7 +351,7 @@ if uploaded_file is not None:
             
             st.dataframe(summary_df, use_container_width=True)
             
-            st.info(" Go to the Geographic Calculator and select 'Use PDF Data' to calculate energy potential!")
+            st.info("Go to the Geographic Calculator and select 'Use PDF Data' to calculate energy potential!")
         
     except Exception as e:
         st.error(f"Error processing PDF: {str(e)}")
