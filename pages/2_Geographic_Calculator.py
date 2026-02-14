@@ -6,7 +6,24 @@ from streamlit_folium import st_folium
 import plotly.graph_objects as go
 import plotly.express as px
 
-st.set_page_config(page_title="Geographic Calculator", layout="wide")
+# Carbon Emission Factors (Bangladesh specific - Source: BPDB & IEA)
+CARBON_FACTORS = {
+    'coal': 1.05,
+    'natural_gas': 0.45,
+    'diesel': 0.78,
+    'furnace_oil': 0.85,
+    'grid_average_bangladesh': 0.62
+}
+
+OTHER_EMISSIONS = {
+    'SO2': 2.8,
+    'NOx': 1.9,
+    'PM2.5': 0.15,
+    'CH4': 0.03,
+    'mercury': 0.00001
+}
+
+st.set_page_config(page_title="Geographic Calculator - EcoGrid", layout="wide", page_icon="🌍")
 
 # Initialize session state
 if 'geo_data' not in st.session_state:
@@ -15,9 +32,11 @@ if 'pdf_extracted' not in st.session_state:
     st.session_state.pdf_extracted = {}
 if 'predictions' not in st.session_state:
     st.session_state.predictions = {}
+if 'linked_locations' not in st.session_state:
+    st.session_state.linked_locations = []
 
-st.title("Geographic Energy Calculator")
-st.markdown("*Map-based renewable energy potential analysis*")
+st.title("🌍 Geographic Energy Calculator")
+st.markdown("*Map-based renewable energy potential & carbon impact analysis*")
 
 # Sidebar: Input Method
 st.sidebar.header("Location Input")
@@ -27,7 +46,14 @@ input_method = st.sidebar.radio(
 )
 
 # Main Content
-tab1, tab2, tab3, tab4 = st.tabs(["Calculate", "Map View", "Analysis", "Export"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "Calculate", 
+    "Map View", 
+    "Carbon Impact",
+    "Energy Flow",
+    "Analysis", 
+    "Export"
+])
 
 # TAB 2: MAP VIEW (moved before Calculate tab to handle clicks first)
 with tab2:
@@ -51,12 +77,14 @@ with tab2:
         location_name = st.session_state.geo_data.get('location_name', 'Selected Location')
         total_mw = st.session_state.geo_data.get('P_total_MW', 0)
         households = st.session_state.geo_data.get('households_total', 0)
+        carbon_saved = st.session_state.geo_data.get('carbon_saved_tons', 0)
         
         popup_html = f"""
-        <div style="font-family: Arial; width: 200px;">
+        <div style="font-family: Arial; width: 250px;">
             <h4>{location_name}</h4>
             <b>Total Power:</b> {total_mw:.2f} MW<br>
             <b>Households:</b> {households:,}<br>
+            <b>CO₂ Saved:</b> {carbon_saved:,.0f} tons/year<br>
             <b>Coordinates:</b><br>
             {map_lat:.4f}, {map_lng:.4f}
         </div>
@@ -75,6 +103,30 @@ with tab2:
             tooltip=f"{location_name}: {total_mw:.2f} MW",
             icon=folium.Icon(color=color, icon='info-sign')
         ).add_to(m)
+    
+    # Add linked location markers
+    if st.session_state.linked_locations:
+        for loc in st.session_state.linked_locations:
+            loc_lat = loc.get('latitude', 0)
+            loc_lng = loc.get('longitude', 0)
+            loc_name = loc.get('location_name', 'Linked Location')
+            loc_mw = loc.get('P_total_MW', 0)
+            loc_carbon = loc.get('carbon_saved_tons', 0)
+            
+            popup_html = f"""
+            <div style="font-family: Arial; width: 200px;">
+                <h4>🔗 {loc_name}</h4>
+                <b>Power:</b> {loc_mw:.2f} MW<br>
+                <b>CO₂ Saved:</b> {loc_carbon:,.0f} tons/year
+            </div>
+            """
+            
+            folium.Marker(
+                [loc_lat, loc_lng],
+                popup=folium.Popup(popup_html, max_width=300),
+                tooltip=f"🔗 {loc_name}",
+                icon=folium.Icon(color='blue', icon='link', prefix='fa')
+            ).add_to(m)
     
     st.markdown("**Click on the map to select a new location**")
     map_data = st_folium(m, width=700, height=500, key="main_map")
@@ -100,11 +152,10 @@ with tab1:
         if input_method != "Click on Map":
             st.warning(f"Map coordinates available: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}. Change input method to 'Click on Map' in the sidebar to use them.")
     
-    # Determine default values based on input method (only for initial setup)
+    # Determine default values based on input method
     if input_method == "Use PDF Data" and st.session_state.pdf_extracted:
         st.success("Using data from PDF Analyzer")
         
-        # Pre-fill with PDF data
         initial_latitude = float(st.session_state.pdf_extracted.get('latitude', 23.8103))
         initial_longitude = float(st.session_state.pdf_extracted.get('longitude', 90.4125))
         initial_waterfall_height = float(st.session_state.pdf_extracted.get('waterfall_height', 0.0))
@@ -124,7 +175,6 @@ with tab1:
         initial_location_name = "Default Location"
         
     elif input_method == "Click on Map":
-        # Check if user has clicked on map
         if 'clicked_lat' in st.session_state.geo_data and 'clicked_lng' in st.session_state.geo_data:
             st.success(f"Using map location: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}")
             initial_latitude = float(st.session_state.geo_data['clicked_lat'])
@@ -159,7 +209,7 @@ with tab1:
         initial_depth = 3.0
         initial_location_name = "My Location"
     
-    # Initialize form data in session state if not exists (use initial values only once)
+    # Initialize form data in session state if not exists
     if 'form_latitude' not in st.session_state:
         st.session_state.form_latitude = initial_latitude
     if 'form_longitude' not in st.session_state:
@@ -173,7 +223,7 @@ with tab1:
     if 'form_depth' not in st.session_state:
         st.session_state.form_depth = initial_depth
     
-    # Update ONLY coordinates when input method changes to "Click on Map"
+    # Update coordinates when input method changes to "Click on Map"
     if input_method == "Click on Map" and 'clicked_lat' in st.session_state.geo_data:
         st.session_state.form_latitude = float(st.session_state.geo_data['clicked_lat'])
         st.session_state.form_longitude = float(st.session_state.geo_data['clicked_lng'])
@@ -187,7 +237,7 @@ with tab1:
         st.session_state.form_geo_temp = initial_geo_temp
         st.session_state.form_depth = initial_depth
     
-    # Input fields with session state
+    # Input fields
     location_name = st.text_input("Location Name", value=initial_location_name, help="Enter a descriptive name for this location")
     
     if not location_name or location_name.strip() == "":
@@ -314,20 +364,17 @@ with tab1:
         capacity_factor = st.slider("Capacity Factor", 0.5, 0.95, 0.85, 0.01)
     
     # CALCULATIONS WITH VALIDATION
-    if st.button("Calculate Energy Potential", type="primary"):
+    if st.button("Calculate Energy Potential & Carbon Impact", type="primary"):
         
         # INPUT VALIDATION
         validation_errors = []
         
-        # Validate location name
         if not location_name or location_name.strip() == "":
             validation_errors.append("ERROR: Location name cannot be empty")
         
-        # Validate coordinates
         if latitude == 0 and longitude == 0:
             validation_errors.append("WARNING: Coordinates are at (0, 0). Please verify this is correct.")
         
-        # Validate waterfall data
         if waterfall_height > 0 and waterfall_flow == 0:
             validation_errors.append("ERROR: Waterfall height is set but flow rate is 0. Both must be greater than 0 for waterfall calculations.")
         
@@ -340,7 +387,6 @@ with tab1:
         if waterfall_flow > 1000:
             validation_errors.append("WARNING: Flow rate exceeds 1000 m³/s. This is extremely high - please verify.")
         
-        # Validate geothermal data
         if geo_temp > 0 and geo_temp < 50:
             validation_errors.append("WARNING: Geothermal temperature below 50°C is too low for efficient energy generation.")
         
@@ -353,7 +399,6 @@ with tab1:
         if depth < 1 and geo_temp > 100:
             validation_errors.append("WARNING: High temperature at shallow depth is unusual. Please verify data.")
         
-        # Validate that at least one energy source is viable
         if waterfall_height == 0 and waterfall_flow == 0 and (geo_temp == 0 or geo_temp < 50):
             validation_errors.append("ERROR: No viable energy source detected. Please enter either waterfall data or geothermal data (temp > 50°C).")
         
@@ -366,17 +411,15 @@ with tab1:
                 else:
                     st.warning(error)
             
-            # Check if there are critical errors (marked with ERROR)
             critical_errors = [e for e in validation_errors if e.startswith("ERROR")]
             if critical_errors:
                 st.error("**Cannot proceed with calculation. Please fix the errors above.**")
-                st.stop()  # Stop execution
+                st.stop()
             else:
-                # Only warnings - ask for confirmation
                 if not st.checkbox("I acknowledge the warnings above and want to proceed with calculation"):
                     st.stop()
         
-        with st.spinner("Calculating..."):
+        with st.spinner("Calculating energy potential and environmental impact..."):
             
             # Constants
             rho = 1000
@@ -427,25 +470,18 @@ with tab1:
                 has_geothermal = False
             
             # WASTE ENERGY RECOVERY (Continuous Second Line - Always ON)
-            # This system runs independently, continuously capturing waste heat and mechanical losses
-            # It operates regardless of main system output levels
+            base_waste_sources = 0
             
-            # Base waste sources that are always present:
-            base_waste_sources = 0  # kWh/year from ambient losses
-            
-            # Waterfall turbine waste (friction, heat, vibration)
             if has_waterfall:
-                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.30  # 30% of output becomes waste
+                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.30
                 base_waste_sources += waterfall_waste
             
-            # Geothermal system waste (heat dissipation, pump losses)
             if has_geothermal:
-                geothermal_waste = E_geo_year_MWh * 1000 * 0.30  # 30% waste from geothermal
+                geothermal_waste = E_geo_year_MWh * 1000 * 0.30
                 base_waste_sources += geothermal_waste
             
-            # Continuous recovery system (Second Line - 80% recovery efficiency)
-            waste_recovered_kWh = base_waste_sources * 0.80  # Always capturing 80% of waste
-            waste_remaining_kWh = base_waste_sources * 0.20  # 20% reserved for system stability
+            waste_recovered_kWh = base_waste_sources * 0.80
+            waste_remaining_kWh = base_waste_sources * 0.20
             
             E_waste_recovered_MWh = waste_recovered_kWh / 1000
             E_waste_remaining_MWh = waste_remaining_kWh / 1000
@@ -456,6 +492,21 @@ with tab1:
             P_total_MW = P_waterfall_MW + P_geo_MW
             E_total_year_MWh = E_waterfall_year_MWh + E_geo_year_MWh + E_waste_recovered_MWh
             households_total = int(E_total_year_MWh * 1000 / 7.2)
+            
+            # CARBON EMISSIONS CALCULATIONS
+            carbon_factor = CARBON_FACTORS['grid_average_bangladesh']
+            carbon_saved_tons = E_total_year_MWh * carbon_factor
+            
+            SO2_saved = E_total_year_MWh * OTHER_EMISSIONS['SO2']
+            NOx_saved = E_total_year_MWh * OTHER_EMISSIONS['NOx']
+            PM25_saved = E_total_year_MWh * OTHER_EMISSIONS['PM2.5']
+            CH4_saved = E_total_year_MWh * OTHER_EMISSIONS['CH4']
+            mercury_saved = E_total_year_MWh * OTHER_EMISSIONS['mercury']
+            
+            trees_equivalent = int(carbon_saved_tons * 16.5)
+            cars_off_road = int(carbon_saved_tons / 4.6)
+            coal_avoided_tons = carbon_saved_tons / CARBON_FACTORS['coal']
+            gas_avoided_tons = carbon_saved_tons / CARBON_FACTORS['natural_gas']
             
             # STORE IN SESSION STATE
             st.session_state.geo_data = {
@@ -473,21 +524,31 @@ with tab1:
                 'E_geo_year_MWh': E_geo_year_MWh,
                 'E_waste_recovered_MWh': E_waste_recovered_MWh,
                 'E_waste_remaining_MWh': E_waste_remaining_MWh,
-                'base_waste_sources': base_waste_sources / 1000,  # Convert to MWh for storage
+                'base_waste_sources': base_waste_sources / 1000,
                 'E_total_year_MWh': E_total_year_MWh,
                 'households_total': households_total,
                 'pipe_material': pipe_material,
                 'has_waterfall': has_waterfall,
-                'has_geothermal': has_geothermal
+                'has_geothermal': has_geothermal,
+                'carbon_saved_tons': carbon_saved_tons,
+                'SO2_saved_kg': SO2_saved,
+                'NOx_saved_kg': NOx_saved,
+                'PM25_saved_kg': PM25_saved,
+                'CH4_saved_kg': CH4_saved,
+                'mercury_saved_kg': mercury_saved,
+                'trees_equivalent': trees_equivalent,
+                'cars_off_road': cars_off_road,
+                'coal_avoided_tons': coal_avoided_tons,
+                'gas_avoided_tons': gas_avoided_tons
             }
             
             st.session_state.predictions['waterfall_mw'] = P_waterfall_MW
             st.session_state.predictions['geo_mw'] = P_geo_MW
             st.session_state.predictions['total_annual_mwh'] = E_total_year_MWh
             st.session_state.predictions['location'] = location_name
-            
+        
         # DISPLAY RESULTS
-        st.success("Calculation Complete!")
+        st.success("✅ Calculation Complete!")
         
         st.markdown("### Total System Output")
         col1, col2, col3, col4 = st.columns(4)
@@ -499,8 +560,28 @@ with tab1:
         with col3:
             st.metric("Households Powered", f"{households_total:,}")
         with col4:
-            revenue_estimate = E_total_year_MWh * 80
-            st.metric("Est. Annual Revenue", f"${revenue_estimate:,.0f}")
+            st.metric("CO₂ Saved", f"{carbon_saved_tons:,.0f} tons/year", 
+                     delta="vs fossil fuel", delta_color="normal")
+        
+        st.markdown("---")
+        
+        # Environmental Impact Summary
+        st.markdown("### 🌱 Environmental Impact vs Fossil Fuel Generation")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Trees Equivalent", f"{trees_equivalent:,}", 
+                     help="Number of trees needed to absorb this CO₂")
+        with col2:
+            st.metric("Cars Off Road", f"{cars_off_road:,}", 
+                     help="Equivalent to removing this many cars from roads")
+        with col3:
+            st.metric("Coal Avoided", f"{coal_avoided_tons:,.0f} MWh", 
+                     help="Equivalent coal generation avoided")
+        with col4:
+            st.metric("Gas Avoided", f"{gas_avoided_tons:,.0f} MWh", 
+                     help="Equivalent natural gas generation avoided")
         
         st.markdown("---")
         
@@ -571,6 +652,25 @@ with tab1:
             )
             st.plotly_chart(fig_bar, use_container_width=True)
         
+        st.markdown("---")
+        
+        # Add to Linked Locations button
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🔗 Add to Linked Locations Network"):
+                already_linked = any(
+                    loc.get('location_name') == st.session_state.geo_data.get('location_name')
+                    for loc in st.session_state.linked_locations
+                )
+                
+                if already_linked:
+                    st.warning("This location is already in the linked network!")
+                else:
+                    st.session_state.linked_locations.append(st.session_state.geo_data.copy())
+                    st.success(f"✅ Added '{st.session_state.geo_data.get('location_name')}' to linked network!")
+                    st.info(f"Total linked locations: {len(st.session_state.linked_locations)}")
+        
         with st.expander("Detailed Calculations"):
             if has_waterfall:
                 st.markdown("#### Waterfall Turbine System")
@@ -607,9 +707,309 @@ with tab1:
                 st.info("**Note:** This recovery system operates continuously and independently, capturing waste heat, friction losses, and mechanical inefficiencies from the primary generation systems.")
         
         st.success("Data saved and sent to Time-Series Predictor")
+# PART 2 - Continue from Part 1
+# This contains: TAB 3 (Carbon Impact), TAB 4 (Energy Flow), TAB 5 (Analysis), TAB 6 (Export)
 
-# TAB 3: ANALYSIS
+# TAB 3: CARBON IMPACT
 with tab3:
+    st.header("🌍 Carbon & Environmental Impact Analysis")
+    
+    if st.session_state.geo_data and 'carbon_saved_tons' in st.session_state.geo_data:
+        
+        carbon_saved = st.session_state.geo_data['carbon_saved_tons']
+        energy_mwh = st.session_state.geo_data['E_total_year_MWh']
+        
+        st.markdown(f"### Location: {st.session_state.geo_data.get('location_name')}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### ♻️ Your Renewable System")
+            st.success(f"**{energy_mwh:,.0f} MWh/year**")
+            st.success(f"**0 tons CO₂** emissions")
+            st.success("**Clean & Sustainable**")
+        
+        with col2:
+            st.markdown("#### ⚫ Equivalent Fossil Fuel System")
+            st.error(f"**{energy_mwh:,.0f} MWh/year**")
+            st.error(f"**{carbon_saved:,.0f} tons CO₂** emissions")
+            st.error("**Polluting & Harmful**")
+        
+        st.markdown("---")
+        st.markdown("### Harmful Emissions Avoided (per year)")
+        
+        emissions_df = pd.DataFrame({
+            'Pollutant': ['CO₂', 'SO₂', 'NOx', 'PM2.5', 'CH₄', 'Mercury'],
+            'Amount Avoided': [
+                f"{st.session_state.geo_data['carbon_saved_tons']:,.0f} tons",
+                f"{st.session_state.geo_data['SO2_saved_kg']:,.1f} kg",
+                f"{st.session_state.geo_data['NOx_saved_kg']:,.1f} kg",
+                f"{st.session_state.geo_data['PM25_saved_kg']:,.2f} kg",
+                f"{st.session_state.geo_data['CH4_saved_kg']:,.2f} kg",
+                f"{st.session_state.geo_data['mercury_saved_kg']*1000:,.3f} g"
+            ],
+            'Health Impact': [
+                'Climate change, global warming',
+                'Acid rain, respiratory diseases',
+                'Smog, lung damage',
+                'Heart disease, premature death',
+                'Greenhouse gas (25x worse than CO₂)',
+                'Neurotoxin, brain damage'
+            ]
+        })
+        
+        st.dataframe(emissions_df, use_container_width=True)
+        
+        st.markdown("---")
+        
+        st.markdown("### Visual Impact Comparison")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            fuel_comparison = pd.DataFrame({
+                'Fuel Type': ['Your System', 'Coal', 'Natural Gas', 'Diesel', 'Furnace Oil'],
+                'CO₂ Emissions (tons)': [
+                    0,
+                    energy_mwh * CARBON_FACTORS['coal'],
+                    energy_mwh * CARBON_FACTORS['natural_gas'],
+                    energy_mwh * CARBON_FACTORS['diesel'],
+                    energy_mwh * CARBON_FACTORS['furnace_oil']
+                ]
+            })
+            
+            fig = px.bar(
+                fuel_comparison, 
+                x='Fuel Type', 
+                y='CO₂ Emissions (tons)',
+                title='CO₂ Emissions Comparison by Fuel Type',
+                color='Fuel Type',
+                color_discrete_map={
+                    'Your System': 'green',
+                    'Coal': 'black',
+                    'Natural Gas': 'orange',
+                    'Diesel': 'red',
+                    'Furnace Oil': 'darkred'
+                }
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            equivalencies = pd.DataFrame({
+                'Equivalent': ['Trees Planted', 'Cars Removed', 'Homes Powered'],
+                'Amount': [
+                    st.session_state.geo_data['trees_equivalent'],
+                    st.session_state.geo_data['cars_off_road'],
+                    st.session_state.geo_data['households_total']
+                ]
+            })
+            
+            fig2 = px.bar(
+                equivalencies,
+                x='Equivalent',
+                y='Amount',
+                title='Environmental Impact Equivalencies',
+                color='Equivalent',
+                color_discrete_sequence=['green', 'blue', 'purple']
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+        
+        st.markdown("---")
+        st.markdown("### 📊 20-Year Environmental Impact Projection")
+        
+        years = list(range(1, 21))
+        cumulative_co2 = [carbon_saved * year for year in years]
+        cumulative_trees = [st.session_state.geo_data['trees_equivalent'] * year for year in years]
+        
+        from plotly.subplots import make_subplots
+        
+        fig_projection = make_subplots(
+            rows=1, cols=2,
+            subplot_titles=('Cumulative CO₂ Saved', 'Equivalent Trees Planted')
+        )
+        
+        fig_projection.add_trace(
+            go.Scatter(x=years, y=cumulative_co2, mode='lines+markers', 
+                      name='CO₂ Saved', line=dict(color='green', width=3)),
+            row=1, col=1
+        )
+        
+        fig_projection.add_trace(
+            go.Scatter(x=years, y=cumulative_trees, mode='lines+markers',
+                      name='Trees Equivalent', line=dict(color='darkgreen', width=3)),
+            row=1, col=2
+        )
+        
+        fig_projection.update_xaxes(title_text="Years", row=1, col=1)
+        fig_projection.update_xaxes(title_text="Years", row=1, col=2)
+        fig_projection.update_yaxes(title_text="CO₂ (tons)", row=1, col=1)
+        fig_projection.update_yaxes(title_text="Trees", row=1, col=2)
+        fig_projection.update_layout(height=400, showlegend=False)
+        
+        st.plotly_chart(fig_projection, use_container_width=True)
+        
+        st.success(f"**Over 20 years:** {cumulative_co2[-1]:,.0f} tons CO₂ saved = {cumulative_trees[-1]:,} trees planted!")
+        
+    else:
+        st.warning("No calculation data available. Please run calculations in the 'Calculate' tab first!")
+
+# TAB 4: ENERGY FLOW DIAGRAM
+with tab4:
+    st.header("⚡ Energy Flow Visualization")
+    
+    if st.session_state.geo_data and 'P_total_MW' in st.session_state.geo_data:
+        
+        st.markdown(f"### System: {st.session_state.geo_data.get('location_name')}")
+        
+        waterfall_mwh = st.session_state.geo_data.get('E_waterfall_year_MWh', 0)
+        geo_mwh = st.session_state.geo_data.get('E_geo_year_MWh', 0)
+        waste_recovered = st.session_state.geo_data.get('E_waste_recovered_MWh', 0)
+        total_mwh = st.session_state.geo_data.get('E_total_year_MWh', 0)
+        
+        # Calculate waste
+        waste_from_waterfall = waterfall_mwh * 0.30 if waterfall_mwh > 0 else 0
+        waste_from_geo = geo_mwh * 0.30 if geo_mwh > 0 else 0
+        total_waste = waste_from_waterfall + waste_from_geo
+        waste_lost = total_waste * 0.20
+        
+        # Sankey diagram nodes
+        nodes = ['Waterfall Turbine', 'Geothermal System', 'Primary Energy', 'Waste Heat', 
+                'Recovery System', 'Grid Output', 'Lost Heat']
+        
+        # Sankey diagram links
+        links = {
+            'source': [],
+            'target': [],
+            'value': [],
+            'label': []
+        }
+        
+        if waterfall_mwh > 0:
+            links['source'].append(0)
+            links['target'].append(2)
+            links['value'].append(waterfall_mwh)
+            links['label'].append(f'{waterfall_mwh:,.0f} MWh')
+            
+            links['source'].append(0)
+            links['target'].append(3)
+            links['value'].append(waste_from_waterfall)
+            links['label'].append(f'{waste_from_waterfall:,.0f} MWh waste')
+        
+        if geo_mwh > 0:
+            links['source'].append(1)
+            links['target'].append(2)
+            links['value'].append(geo_mwh)
+            links['label'].append(f'{geo_mwh:,.0f} MWh')
+            
+            links['source'].append(1)
+            links['target'].append(3)
+            links['value'].append(waste_from_geo)
+            links['label'].append(f'{waste_from_geo:,.0f} MWh waste')
+        
+        if total_waste > 0:
+            links['source'].append(3)
+            links['target'].append(4)
+            links['value'].append(waste_recovered)
+            links['label'].append(f'{waste_recovered:,.0f} MWh recovered')
+            
+            links['source'].append(3)
+            links['target'].append(6)
+            links['value'].append(waste_lost)
+            links['label'].append(f'{waste_lost:,.0f} MWh lost')
+        
+        # Primary to grid
+        primary_total = waterfall_mwh + geo_mwh
+        if primary_total > 0:
+            links['source'].append(2)
+            links['target'].append(5)
+            links['value'].append(primary_total)
+            links['label'].append(f'{primary_total:,.0f} MWh')
+        
+        # Recovery to grid
+        if waste_recovered > 0:
+            links['source'].append(4)
+            links['target'].append(5)
+            links['value'].append(waste_recovered)
+            links['label'].append(f'{waste_recovered:,.0f} MWh')
+        
+        fig = go.Figure(data=[go.Sankey(
+            node=dict(
+                pad=15,
+                thickness=20,
+                line=dict(color="black", width=0.5),
+                label=nodes,
+                color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#17becf', '#8c564b']
+            ),
+            link=dict(
+                source=links['source'],
+                target=links['target'],
+                value=links['value'],
+                label=links['label']
+            )
+        )])
+        
+        fig.update_layout(
+            title=f"Energy Flow Diagram - {st.session_state.geo_data.get('location_name')}",
+            font_size=12,
+            height=600
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("---")
+        st.markdown("### System Efficiency Analysis")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            primary_efficiency = (primary_total / (primary_total + total_waste)) * 100 if (primary_total + total_waste) > 0 else 0
+            st.metric("Primary System Efficiency", f"{primary_efficiency:.1f}%")
+        
+        with col2:
+            recovery_efficiency = (waste_recovered / total_waste) * 100 if total_waste > 0 else 0
+            st.metric("Waste Recovery Efficiency", f"{recovery_efficiency:.1f}%")
+        
+        with col3:
+            overall_efficiency = (total_mwh / (primary_total + total_waste)) * 100 if (primary_total + total_waste) > 0 else 0
+            st.metric("Overall System Efficiency", f"{overall_efficiency:.1f}%")
+        
+        st.markdown("---")
+        st.markdown("### Energy Component Breakdown")
+        
+        component_data = []
+        
+        if waterfall_mwh > 0:
+            component_data.append({
+                'Component': 'Waterfall Turbine',
+                'Energy (MWh)': waterfall_mwh,
+                'Percentage': (waterfall_mwh / total_mwh * 100) if total_mwh > 0 else 0,
+                'Status': '✅ Active'
+            })
+        
+        if geo_mwh > 0:
+            component_data.append({
+                'Component': 'Geothermal System',
+                'Energy (MWh)': geo_mwh,
+                'Percentage': (geo_mwh / total_mwh * 100) if total_mwh > 0 else 0,
+                'Status': '✅ Active'
+            })
+        
+        if waste_recovered > 0:
+            component_data.append({
+                'Component': 'Waste Recovery',
+                'Energy (MWh)': waste_recovered,
+                'Percentage': (waste_recovered / total_mwh * 100) if total_mwh > 0 else 0,
+                'Status': '♻️ Continuous'
+            })
+        
+        component_df = pd.DataFrame(component_data)
+        st.dataframe(component_df, use_container_width=True)
+        
+    else:
+        st.warning("No calculation data available. Please run calculations in the 'Calculate' tab first!")
+
+# TAB 5: ANALYSIS
+with tab5:
     st.header("Geographic Energy Analysis")
     
     if st.session_state.geo_data and 'P_total_MW' in st.session_state.geo_data:
@@ -653,7 +1053,6 @@ with tab3:
                 st.info("No geothermal data - not applicable for this location")
         
         st.markdown("---")
-        
         st.subheader("Sensitivity Analysis")
         
         sensitivity_param = st.selectbox(
@@ -812,8 +1211,8 @@ with tab3:
     else:
         st.warning("No calculation data available. Please go to the 'Calculate' tab first!")
 
-# TAB 4: EXPORT
-with tab4:
+# TAB 6: EXPORT
+with tab6:
     st.header("Export & Batch Analysis")
     
     if st.session_state.geo_data and 'location_name' in st.session_state.geo_data:
@@ -827,6 +1226,7 @@ with tab4:
             'Geothermal Power (MW)': [st.session_state.geo_data.get('P_geo_MW', 0)],
             'Total Power (MW)': [st.session_state.geo_data.get('P_total_MW', 0)],
             'Annual Energy (MWh)': [st.session_state.geo_data.get('E_total_year_MWh', 0)],
+            'CO₂ Saved (tons/year)': [st.session_state.geo_data.get('carbon_saved_tons', 0)],
             'Households Powered': [st.session_state.geo_data.get('households_total', 0)],
             'Pipe Material': [st.session_state.geo_data.get('pipe_material', 'N/A')]
         }
@@ -840,7 +1240,7 @@ with tab4:
             st.download_button(
                 label="Download as CSV",
                 data=csv,
-                file_name=f"energy_calc_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.csv",
+                file_name=f"ecogrid_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.csv",
                 mime="text/csv"
             )
         
@@ -849,12 +1249,53 @@ with tab4:
             st.download_button(
                 label="Download as JSON",
                 data=json_str,
-                file_name=f"energy_calc_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.json",
+                file_name=f"ecogrid_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.json",
                 mime="application/json"
             )
     
-    st.markdown("---")
+    # Linked locations export
+    if st.session_state.linked_locations:
+        st.markdown("---")
+        st.subheader("🔗 Linked Location Network Export")
+        
+        network_data = []
+        for loc in st.session_state.linked_locations:
+            network_data.append({
+                'Location': loc.get('location_name'),
+                'Latitude': loc.get('latitude'),
+                'Longitude': loc.get('longitude'),
+                'Power (MW)': loc.get('P_total_MW'),
+                'Energy (MWh/year)': loc.get('E_total_year_MWh'),
+                'CO₂ Saved (tons)': loc.get('carbon_saved_tons'),
+                'Households': loc.get('households_total')
+            })
+        
+        network_df = pd.DataFrame(network_data)
+        st.dataframe(network_df, use_container_width=True)
+        
+        # Network totals
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Locations", len(st.session_state.linked_locations))
+        with col2:
+            total_power = sum([loc.get('P_total_MW', 0) for loc in st.session_state.linked_locations])
+            st.metric("Combined Power", f"{total_power:.2f} MW")
+        with col3:
+            total_carbon = sum([loc.get('carbon_saved_tons', 0) for loc in st.session_state.linked_locations])
+            st.metric("Total CO₂ Saved", f"{total_carbon:,.0f} tons")
+        with col4:
+            total_households = sum([loc.get('households_total', 0) for loc in st.session_state.linked_locations])
+            st.metric("Total Households", f"{total_households:,}")
+        
+        csv_network = network_df.to_csv(index=False)
+        st.download_button(
+            label="Download Linked Network Data",
+            data=csv_network,
+            file_name="ecogrid_linked_network.csv",
+            mime="text/csv"
+        )
     
+    st.markdown("---")
     st.subheader("Batch Analysis from CSV")
     
     st.markdown("""
@@ -928,12 +1369,15 @@ with tab4:
                         e_geo = 0
                         geothermal_waste = 0
                     
-                    # Continuous waste recovery (Second Line - always ON)
+                    # Waste recovery
                     total_waste = waterfall_waste + geothermal_waste
-                    e_waste_recovered = (total_waste * 0.80) / 1000  # 80% recovery
+                    e_waste_recovered = (total_waste * 0.80) / 1000
                     
                     total_annual = e_waterfall + e_geo + e_waste_recovered
                     households = int(total_annual * 1000 / 7.2)
+                    
+                    # Carbon calculations
+                    carbon_saved = total_annual * CARBON_FACTORS['grid_average_bangladesh']
                     
                     if temp < 300:
                         material = "Stainless Steel"
@@ -949,6 +1393,7 @@ with tab4:
                         'Waterfall_MW': round(p_waterfall, 2),
                         'Geothermal_MW': round(p_geo, 2),
                         'Total_Annual_MWh': round(total_annual, 0),
+                        'CO2_Saved_tons': round(carbon_saved, 0),
                         'Households': households,
                         'Pipe_Material': material if temp > 50 else 'N/A'
                     })
@@ -961,7 +1406,7 @@ with tab4:
                 st.write("### Batch Analysis Results")
                 st.dataframe(results_df, use_container_width=True)
                 
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
                     st.metric("Total Locations", len(results_df))
@@ -969,6 +1414,9 @@ with tab4:
                     total_power = results_df['Waterfall_MW'].sum() + results_df['Geothermal_MW'].sum()
                     st.metric("Combined Power", f"{total_power:.2f} MW")
                 with col3:
+                    total_carbon = results_df['CO2_Saved_tons'].sum()
+                    st.metric("Total CO₂ Saved", f"{total_carbon:,.0f} tons/yr")
+                with col4:
                     total_households = results_df['Households'].sum()
                     st.metric("Total Households", f"{total_households:,}")
                 
@@ -979,7 +1427,7 @@ with tab4:
                     size='Total_Annual_MWh',
                     color='Total_Annual_MWh',
                     hover_name='Location',
-                    hover_data=['Households', 'Waterfall_MW', 'Geothermal_MW'],
+                    hover_data=['Households', 'Waterfall_MW', 'Geothermal_MW', 'CO2_Saved_tons'],
                     color_continuous_scale='Viridis',
                     size_max=20,
                     zoom=5
@@ -1004,5 +1452,5 @@ with tab4:
             st.info("Please make sure your CSV has the correct column names and format.")
 
 st.markdown("---")
-st.markdown("Community Energy Toolkit")
-st.caption("Data ready for Time-Series Prediction and Energy Monitor")
+st.markdown("**EcoGrid Toolkit** - Geographic Calculator")
+st.caption("Renewable energy analysis with environmental impact assessment")
