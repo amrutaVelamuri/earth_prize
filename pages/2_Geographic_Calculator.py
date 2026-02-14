@@ -56,6 +56,15 @@ def generate_ai_report(data, report_type, audience, language_style, focus_areas,
         tone = "clear and instructive"
         detail_level = "explanatory"
     
+    # Extract all variables to avoid f-string dictionary access issues
+    total_mw = power['total_mw']
+    annual_energy_mwh = power['annual_energy_mwh']
+    households_powered = community['households_powered']
+    people_served = community['people_served']
+    carbon_saved_tons = env['carbon_saved_tons']
+    trees_equivalent = env['trees_equivalent']
+    cars_off_road = env['cars_off_road']
+    
     report = f"""
 # {report_type}
 ## {location} Renewable Energy Project
@@ -68,26 +77,26 @@ def generate_ai_report(data, report_type, audience, language_style, focus_areas,
 
 ## EXECUTIVE SUMMARY
 
-The {location} renewable energy project represents a transformative opportunity for clean, sustainable power generation. This project will generate **{power['total_mw']:.2f} MW** of electricity—enough to power **{community['households_powered']:,} households** ({community['people_served']:,} people).
+The {location} renewable energy project represents a transformative opportunity for clean, sustainable power generation. This project will generate **{total_mw:.2f} MW** of electricity—enough to power **{households_powered:,} households** ({people_served:,} people).
 
 ### Key Highlights at a Glance:
 
-📊 **Total Annual Energy:** {power['annual_energy_mwh']:,.0f} MWh/year  
-🌱 **CO₂ Emissions Avoided:** {env['carbon_saved_tons']:,.0f} tons/year  
-🏘️ **Community Impact:** Powers {community['households_powered']:,} homes  
-🌳 **Environmental Equivalent:** Planting {env['trees_equivalent']:,} trees or removing {env['cars_off_road']:,} cars from roads
+📊 **Total Annual Energy:** {annual_energy_mwh:,.0f} MWh/year  
+🌱 **CO₂ Emissions Avoided:** {carbon_saved_tons:,.0f} tons/year  
+🏘️ **Community Impact:** Powers {households_powered:,} homes  
+🌳 **Environmental Equivalent:** Planting {trees_equivalent:,} trees or removing {cars_off_road:,} cars from roads
 
 ---
 
 ## WHAT THESE NUMBERS ACTUALLY MEAN
 
-### Understanding {power['total_mw']:.2f} MW of Power
+### Understanding {total_mw:.2f} MW of Power
 
-You might hear "{power['total_mw']:.2f} MW" and wonder what that really means for your community. Let's break it down:
+You might hear "{total_mw:.2f} MW" and wonder what that really means for your community. Let's break it down:
 
-- **For Homes:** This is enough electricity to power {community['households_powered']:,} households continuously, 24/7
-- **For Schools:** Could run approximately {int(community['households_powered'] / 500)} average-sized schools year-round with lights, computers, and air conditioning
-- **For Businesses:** Enough to support {int(power['annual_energy_mwh'] / 8.76)} small to medium-sized factories operating full-time
+- **For Homes:** This is enough electricity to power {households_powered:,} households continuously, 24/7
+- **For Schools:** Could run approximately {int(households_powered / 500)} average-sized schools year-round with lights, computers, and air conditioning
+- **For Businesses:** Enough to support {int(annual_energy_mwh / 8.76)} small to medium-sized factories operating full-time
 - **In Daily Life:** Every person in this community could charge their phone 24,000 times per year with their share of this clean energy
 
 ### Energy Sources: How This Works
@@ -97,10 +106,13 @@ This project combines multiple renewable energy technologies:
 """
     
     if power['waterfall_mw'] > 0:
+        waterfall_mw = power['waterfall_mw']
+        waterfall_height = tech['waterfall_height']
+        waterfall_flow = tech['waterfall_flow']
         report += f"""
-**💧 Waterfall Hydroelectric System: {power['waterfall_mw']:.2f} MW**
+**💧 Waterfall Hydroelectric System: {waterfall_mw:.2f} MW**
 
-Think of a waterfall as nature's engine. Water falling from {tech['waterfall_height']} meters high drives turbines—like a water wheel, but much more powerful. With {tech['waterfall_flow']} cubic meters of water flowing every second, this creates constant, reliable electricity.
+Think of a waterfall as nature's engine. Water falling from {waterfall_height} meters high drives turbines—like a water wheel, but much more powerful. With {waterfall_flow} cubic meters of water flowing every second, this creates constant, reliable electricity.
 
 - **Always On:** Unlike solar (nighttime) or wind (calm days), waterfalls flow continuously
 - **Clean:** No fuel needed, no emissions, just water doing what it naturally does
@@ -109,10 +121,14 @@ Think of a waterfall as nature's engine. Water falling from {tech['waterfall_hei
 """
     
     if power['geothermal_mw'] > 0:
+        geothermal_mw = power['geothermal_mw']
+        geothermal_temp = tech['geothermal_temp']
+        drilling_depth = tech['drilling_depth']
+        pipe_material = tech['pipe_material']
         report += f"""
-**🌋 Geothermal Energy System: {power['geothermal_mw']:.2f} MW**
+**🌋 Geothermal Energy System: {geothermal_mw:.2f} MW**
 
-Deep underground, the Earth is incredibly hot—{tech['geothermal_temp']}°C at {tech['drilling_depth']} kilometers down. We can tap into this heat using pipes (made of {tech['pipe_material']}) to generate electricity, similar to how a tea kettle boils water.
+Deep underground, the Earth is incredibly hot—{geothermal_temp}°C at {drilling_depth} kilometers down. We can tap into this heat using pipes (made of {pipe_material}) to generate electricity, similar to how a tea kettle boils water.
 
 - **24/7 Availability:** The Earth's heat never stops, so neither does the power
 - **Weather Independent:** Rain or shine, hot or cold outside, geothermal keeps producing
@@ -129,25 +145,31 @@ Deep underground, the Earth is incredibly hot—{tech['geothermal_temp']}°C at 
 """
 
     if "Highlight environmental benefits" in focus_areas:
+        # Extract env variables
+        carbon_saved = carbon_saved_tons  # Already extracted earlier
+        trees_equiv = trees_equivalent  # Already extracted earlier
+        cars_removed = cars_off_road  # Already extracted earlier
+        coal_avoided = env['coal_avoided_tons']
+        
         report += f"""
-### What Does {env['carbon_saved_tons']:,.0f} Tons of CO₂ Saved Actually Mean?
+### What Does {carbon_saved:,.0f} Tons of CO₂ Saved Actually Mean?
 
-Carbon dioxide (CO₂) is the main greenhouse gas causing climate change. Every year, this project prevents {env['carbon_saved_tons']:,.0f} tons from entering the atmosphere. Here's what that looks like:
+Carbon dioxide (CO₂) is the main greenhouse gas causing climate change. Every year, this project prevents {carbon_saved:,.0f} tons from entering the atmosphere. Here's what that looks like:
 
-🌳 **Tree Equivalent:** {env['trees_equivalent']:,} trees  
+🌳 **Tree Equivalent:** {trees_equiv:,} trees  
 Planting this many trees and letting them grow for 10 years would absorb the same amount of CO₂.
 
-🚗 **Cars Off the Road:** {env['cars_off_road']:,} vehicles  
-This is equal to permanently removing {env['cars_off_road']:,} gasoline-powered cars from the roads.
+🚗 **Cars Off the Road:** {cars_removed:,} vehicles  
+This is equal to permanently removing {cars_removed:,} gasoline-powered cars from the roads.
 
-🏭 **Coal Avoided:** {env['coal_avoided_tons']:,.0f} MWh of coal power  
-We avoid burning {env['coal_avoided_tons']:,.0f} MWh worth of coal, one of the dirtiest fossil fuels.
+🏭 **Coal Avoided:** {coal_avoided:,.0f} MWh of coal power  
+We avoid burning {coal_avoided:,.0f} MWh worth of coal, one of the dirtiest fossil fuels.
 
 ### Long-Term Environmental Impact
 
 Over a 20-year operational period:
-- **Total CO₂ Prevented:** {env['carbon_saved_tons'] * 20:,.0f} tons
-- **Forest Equivalent:** {env['trees_equivalent'] * 20:,} mature trees
+- **Total CO₂ Prevented:** {carbon_saved * 20:,.0f} tons
+- **Forest Equivalent:** {trees_equiv * 20:,} mature trees
 - **Generational Impact:** Cleaner air for our children and grandchildren
 
 ### Beyond Carbon: Other Pollutants Eliminated
@@ -359,17 +381,17 @@ The project plan includes:
 ### Annual Value Created
 
 **Energy Production Value:**
-- {power['annual_energy_mwh']:,.0f} MWh × Average electricity price
+- {annual_energy_mwh:,.0f} MWh × Average electricity price
 - Estimated annual revenue: Varies by local rates
 - 30-year lifetime value: Substantial long-term returns
 
 **Environmental Value:**
-- Carbon credits from {env['carbon_saved_tons']:,.0f} tons CO₂ saved
+- Carbon credits from {carbon_saved:,.0f} tons CO₂ saved
 - Health cost savings from cleaner air
 - Ecosystem benefits from reduced pollution
 
 **Social Value:**
-- {community['households_powered']:,} households with reliable power
+- {households_powered:,} households with reliable power
 - Educational opportunities from electricity access
 - Economic development from stable energy supply
 
@@ -392,38 +414,854 @@ While initial investment is required, renewable energy becomes dramatically chea
 
 """
 
-    report += f"""
+    report += """
 ---
 
-## NEXT STEPS: HOW TO MOVE FORWARD
+## NEXT STEPS: COMPREHENSIVE IMPLEMENTATION GUIDE FOR CITY PLANNERS
 
-### Immediate Actions (Next 30 Days)
+As a city planner, implementing this renewable energy project requires coordinating multiple stakeholders, navigating regulatory frameworks, and ensuring alignment with broader urban development goals. Here's your detailed roadmap:
 
-1. **Community Meeting:** Present these findings to local leaders and residents
-2. **Site Verification:** Conduct detailed technical survey of the location
-3. **Stakeholder Engagement:** Meet with government officials and potential partners
-4. **Funding Research:** Identify grant and loan opportunities
+---
 
-### Short-Term Actions (Next 3-6 Months)
+### PHASE 1: IMMEDIATE ACTIONS (Months 1-3)
 
-1. **Environmental Assessment:** Complete required environmental studies
-2. **Engineering Design:** Hire qualified engineering firm for detailed plans
-3. **Permit Applications:** Submit all necessary regulatory applications
-4. **Financial Planning:** Develop detailed budget and funding strategy
+#### 1.1 Internal Municipal Coordination
 
-### Medium-Term Actions (6-12 Months)
+**Week 1-2: Establish Project Governance**
+- Form inter-departmental steering committee including:
+  - Urban Planning Department (lead)
+  - Public Works & Infrastructure
+  - Environmental Services
+  - Economic Development Office
+  - Finance Department
+  - Legal/Regulatory Affairs
+  - Community Engagement Office
+- Assign project manager and dedicated staff
+- Establish clear decision-making authority and approval processes
+- Set up project management systems and communication protocols
 
-1. **Secure Financing:** Finalize funding from all sources
-2. **Community Investment:** Create opportunities for local co-investment
-3. **Contractor Selection:** Choose qualified construction companies
-4. **Finalize Agreements:** Sign contracts with grid operator and off-takers
+**Week 3-4: Initial Stakeholder Mapping**
+- Identify all key stakeholders:
+  - **Government:** National energy ministry, regional authorities, environmental agencies
+  - **Utilities:** Grid operators, electricity distributors, water authorities
+  - **Community:** Neighborhood associations, local leaders, affected residents
+  - **Technical:** Engineering firms, equipment suppliers, contractors
+  - **Financial:** Development banks, private investors, grant agencies
+  - **Environmental:** Conservation groups, environmental regulators
+- Create stakeholder engagement matrix with contact info and engagement strategy
+- Schedule initial consultation meetings with each group
 
-### Long-Term Vision (2-3 Years)
+**Week 5-8: Technical Feasibility Verification**
+- Commission independent technical assessment of site
+- Verify all calculations and energy production estimates
+- Conduct preliminary geological and hydrological surveys
+- Assess existing infrastructure capacity (roads, grid connection points)
+- Evaluate land ownership and acquisition requirements
+- Document technical risks and mitigation strategies
 
-1. **Construction Completion:** Finish building the facility
-2. **Grid Connection:** Link to national/regional electricity grid
-3. **Commercial Operations:** Begin generating and selling electricity
-4. **Community Benefits:** Start delivering power to local households
+**Deliverables:**
+- Project governance charter and organizational structure
+- Complete stakeholder database and engagement plan
+- Independent technical feasibility report
+- Risk assessment matrix
+- Initial project timeline and critical path analysis
+
+#### 1.2 Regulatory and Legal Framework Assessment
+
+**Permits and Approvals Inventory:**
+Create comprehensive checklist of all required permits:
+
+**National Level:**
+- Environmental Impact Assessment (EIA) approval
+- Energy generation license from national energy regulator
+- Water use permits (for hydroelectric component)
+- Drilling permits (for geothermal component)
+- Grid connection approval from national electricity authority
+- Land use change permissions (if applicable)
+- Construction permits for major infrastructure
+
+**Regional/Provincial Level:**
+- Regional development plan compliance certification
+- Provincial environmental clearances
+- Local water management authority approvals
+- Fire safety and building code approvals
+- Regional grid integration permits
+
+**Municipal Level:**
+- Zoning compliance and variances
+- Building permits for all structures
+- Road use and access permits during construction
+- Noise and vibration permits for construction
+- Tree cutting permits (if required)
+- Archaeological survey compliance (if required)
+
+**Action Items:**
+- Meet with each regulatory agency to understand requirements
+- Create permit dependency chart (which permits are prerequisites for others)
+- Establish realistic timelines for each approval process
+- Identify potential regulatory bottlenecks or conflicts
+- Develop relationships with key regulatory officials
+
+#### 1.3 Community Engagement Strategy
+
+**Month 1: Information Gathering**
+- Conduct door-to-door surveys in affected areas
+- Hold listening sessions to understand community concerns
+- Document existing energy challenges and needs
+- Identify community leaders and influencers
+- Assess communication preferences (meetings, social media, radio, etc.)
+
+**Month 2: Information Dissemination**
+- Prepare plain-language project fact sheets in local languages
+- Create visual materials (maps, renderings, infographics)
+- Launch project website with FAQ section
+- Establish community liaison office in the neighborhood
+- Conduct 3-5 town hall meetings in different locations
+- Present to neighborhood associations and civic groups
+
+**Month 3: Feedback Integration**
+- Compile and analyze all community input
+- Adjust project design based on legitimate concerns
+- Develop community benefit agreement framework
+- Create grievance mechanism for ongoing concerns
+- Establish community advisory committee
+
+**Key Messages for Community:**
+- How will this benefit MY family specifically?
+- Will there be job opportunities for local residents?
+- What are the potential disruptions during construction?
+- How will the project affect property values?
+- What safety measures are in place?
+- How can community members invest or participate?
+
+---
+
+### PHASE 2: DETAILED PLANNING & DESIGN (Months 4-9)
+
+#### 2.1 Comprehensive Environmental Assessment
+
+**Scope of Environmental Studies:**
+
+**Ecological Assessment:**
+- Baseline biodiversity survey (flora and fauna)
+- Aquatic ecosystem analysis (for waterfall site)
+- Migratory bird patterns and collision risk assessment
+- Endangered species habitat evaluation
+- Wetlands and riparian zone mapping
+- Groundwater recharge area identification
+
+**Social Impact Assessment:**
+- Population displacement analysis (if any)
+- Cultural heritage and archaeological survey
+- Impact on indigenous communities (if applicable)
+- Traditional land use and access rights
+- Visual impact assessment for nearby communities
+- Noise and vibration impact modeling
+
+**Cumulative Impact Analysis:**
+- How this project interacts with other development
+- Regional water balance considerations
+- Grid stability and integration effects
+- Traffic and transportation impacts
+- Waste management during construction and operations
+
+**Mitigation Measures Development:**
+For each identified impact, develop specific mitigation:
+- Fish passages and aquatic habitat protection
+- Wildlife corridors and protected zones
+- Construction timing to avoid sensitive periods
+- Noise barriers and vibration dampening
+- Dust control and erosion prevention
+- Water quality monitoring program
+
+**Timeline:** 4-6 months for comprehensive EIA
+**Budget:** ${50,000 - 150,000} depending on complexity
+**Outcome:** Approved EIA certificate from environmental ministry
+
+#### 2.2 Detailed Engineering Design
+
+**Phase 1: Conceptual Engineering (Month 4-5)**
+- Hire reputable engineering firm with renewable energy experience
+- Develop 3-4 design alternatives for comparison
+- Conduct value engineering to optimize cost vs. performance
+- Create preliminary equipment specifications
+- Develop construction sequencing plan
+- Estimate quantities for major materials
+
+**Phase 2: Detailed Design (Month 6-8)**
+- Final civil engineering drawings for all structures
+- Electrical system design and grid connection specifications
+- Mechanical equipment specifications and layouts
+- Geotechnical investigations and foundation design
+- Hydraulic modeling (for waterfall turbines)
+- Thermal modeling (for geothermal system)
+- SCADA and monitoring system design
+- Safety systems and emergency shutdown procedures
+
+**Phase 3: Design Review & Optimization (Month 9)**
+- Independent engineering review by third-party expert
+- Constructability review with contractor input
+- Value engineering workshop to identify cost savings
+- Final design freeze and documentation
+- As-built preparation and document control system
+
+**Technical Specifications to Finalize:**
+- Turbine type, capacity, and manufacturer
+- Generator specifications and grid interface requirements
+- Geothermal well design and drilling specifications
+- Piping materials and specifications (considering {tech['pipe_material']})
+- Electrical substation and transmission line design
+- Access road specifications and right-of-way requirements
+- Construction water supply and waste management
+
+**Deliverables:**
+- Complete engineering drawings (civil, mechanical, electrical)
+- Technical specifications for all equipment
+- Bill of quantities for construction bidding
+- Operation and maintenance manuals outline
+- As-built documentation standards
+
+#### 2.3 Financial Planning and Funding Strategy
+
+**Detailed Cost Estimation:**
+
+**Capital Expenditure (CAPEX) Breakdown:**
+- Site preparation and access: 5-8% of total
+- Civil works (buildings, foundations): 20-25%
+- Electromechanical equipment: 40-50%
+- Electrical infrastructure and grid connection: 10-15%
+- Engineering and design fees: 8-12%
+- Environmental mitigation: 3-5%
+- Contingency: 10-15%
+
+**For this {location} project estimate:**
+- Waterfall component ({waterfall_mw:.2f} MW): $3-5M per MW
+- Geothermal component ({geothermal_mw:.2f} MW): $4-7M per MW
+- **Total estimated CAPEX: $[Calculate based on MW] Million**
+
+**Operating Expenditure (OPEX) - Annual:**
+- Operations staff salaries: $100-200K/year
+- Maintenance and spare parts: 2-3% of CAPEX
+- Insurance: 0.5-1% of CAPEX
+- Grid fees and charges: Variable
+- Environmental monitoring: $20-50K/year
+- Community benefit fund: 2-5% of revenues
+
+**Funding Source Strategy:**
+
+**1. Government Grants (Target: 30-40% of CAPEX)**
+- National renewable energy development fund
+- Climate finance mechanisms (Green Climate Fund)
+- Regional development grants
+- Rural electrification programs
+- Municipal infrastructure funds
+
+**Action:** Prepare grant applications with detailed project justification
+
+**2. Development Finance (Target: 40-50% of CAPEX)**
+- World Bank clean energy loans
+- Asian Development Bank infrastructure financing
+- International Finance Corporation
+- National development banks
+- Green bonds issuance
+
+**Action:** Engage with DFI early, prepare bankable feasibility study
+
+**3. Private Investment (Target: 10-20% of CAPEX)**
+- Independent power producers (IPPs)
+- Infrastructure funds with ESG focus
+- Community investment schemes
+- Municipal bonds
+
+**Action:** Develop investor prospectus with clear return profile
+
+**4. Municipal Contribution (Target: 5-10% of CAPEX)**
+- In-kind contributions (land, existing infrastructure)
+- Municipal budget allocation
+- Revenue from previous projects
+
+**Action:** Get city council approval for budget allocation
+
+**Financial Model Development:**
+- 25-30 year cash flow projection
+- Sensitivity analysis (energy prices, costs, generation)
+- Debt service coverage ratio (target >1.3x)
+- Internal rate of return calculation
+- Net present value analysis
+- Payback period assessment
+
+**Power Purchase Agreement (PPA) Strategy:**
+- Negotiate with national grid or distribution company
+- Target tariff: $0.08-0.12 per kWh (market dependent)
+- Contract length: 20-25 years
+- Escalation clauses tied to inflation
+- Performance guarantees and penalties
+- Force majeure provisions
+
+---
+
+### PHASE 3: PROCUREMENT & CONTRACTING (Months 10-15)
+
+#### 3.1 Procurement Strategy
+
+**Procurement Model Selection:**
+
+**Option A: Engineering, Procurement, Construction (EPC) Contract**
+- Single contractor responsible for entire project
+- Fixed price, turnkey delivery
+- Lower risk for municipality
+- Best for first-time developers
+- **Recommended for this project**
+
+**Option B: Multi-Contract Approach**
+- Separate contracts for civil works, equipment, installation
+- More management intensive
+- Potentially lower cost
+- Requires strong project management capacity
+
+**Option C: Public-Private Partnership (PPP)**
+- Private partner finances, builds, operates
+- Municipality pays for power generated
+- Minimal upfront municipal investment
+- Long-term commitment required
+
+**For {location} Project, recommend:** EPC contract with performance guarantees
+
+#### 3.2 Contractor Prequalification
+
+**Technical Prequalification Criteria:**
+- Minimum 10 years experience in renewable energy
+- Successfully completed at least 3 similar projects
+- Total installed capacity >50 MW across portfolio
+- Experience in similar geological/geographical conditions
+- Strong health, safety, and environmental track record
+- Financial capacity (turnover >10x project value)
+- Local presence or commitment to local partnerships
+
+**Prequalification Process:**
+- Advertise internationally and nationally (Month 10)
+- Receive and evaluate prequalification documents (Month 11)
+- Shortlist 3-5 qualified bidders (Month 11)
+- Conduct bidder site visit and briefing (Month 12)
+
+#### 3.3 Tender Documentation and Bidding
+
+**Tender Package Components:**
+- Instructions to bidders
+- Form of contract (FIDIC or local standard)
+- Detailed specifications and drawings
+- Bill of quantities
+- Project schedule requirements
+- Performance guarantees and warranties
+- Health, safety, and environmental requirements
+- Local content and employment requirements
+
+**Bidding Process:**
+- Issue tender documents to shortlisted bidders (Month 12)
+- Bidder clarification period (2-4 weeks)
+- Technical and financial proposal submission (Month 13)
+- Two-stage evaluation: technical first, then financial
+- Negotiations with top-ranked bidder (Month 14)
+- Contract award and signing (Month 15)
+
+**Evaluation Criteria (Example):**
+- Technical approach and methodology: 40%
+- Experience and qualifications: 20%
+- Project schedule and delivery plan: 15%
+- Price: 20%
+- Local content and community benefits: 5%
+
+#### 3.4 Key Contracts and Agreements
+
+**Contracts to Finalize:**
+
+1. **EPC Contract** with construction contractor
+   - Fixed price: $[X] million
+   - Completion date: [Date]
+   - Performance guarantees: [Specified MW output]
+   - Warranty period: 2-5 years
+   - Liquidated damages for delays
+
+2. **Power Purchase Agreement (PPA)** with grid operator
+   - 25-year term
+   - Tariff: $[X] per kWh
+   - Take-or-pay provisions
+   - Curtailment compensation
+
+3. **Grid Connection Agreement**
+   - Technical specifications for connection
+   - Cost sharing for connection infrastructure
+   - Operation and maintenance responsibilities
+
+4. **Land Lease/Purchase Agreements**
+   - Secure all required land parcels
+   - Easements for transmission lines and access roads
+   - Compensation for affected landowners
+
+5. **Equipment Supply Agreements**
+   - Long-lead items (turbines, generators)
+   - Performance guarantees from manufacturers
+   - After-sales support and spare parts
+
+6. **Operations & Maintenance Agreement**
+   - Consider O&M contractor for first 5 years
+   - Training and capacity building provisions
+   - Transition to municipal operation
+
+---
+
+### PHASE 4: CONSTRUCTION MANAGEMENT (Months 16-34)
+
+#### 4.1 Pre-Construction Activities (Month 16-17)
+
+**Site Preparation:**
+- Establish construction site offices and facilities
+- Set up security and access control
+- Install temporary power and water
+- Create material storage areas
+- Build construction camps for workers (if needed)
+- Establish medical facilities and emergency response
+
+**Mobilization:**
+- Contractor mobilizes equipment and personnel
+- Conduct pre-construction survey and benchmarking
+- Establish quality control laboratory
+- Set up environmental monitoring stations
+- Hold pre-construction meeting with all parties
+
+**Community Preparation:**
+- Finalize construction traffic management plan
+- Establish construction complaints hotline
+- Hire community liaison officers
+- Conduct information campaigns about construction schedule
+- Set up regular community update meetings (monthly)
+
+#### 4.2 Construction Oversight and Management
+
+**Owner's Engineer Role:**
+- Hire independent engineer to represent municipality
+- Daily site supervision and quality control
+- Review and approve contractor submittals
+- Certify progress for payment purposes
+- Monitor compliance with specifications and standards
+- Document changes and variations
+
+**Municipal Project Management Office:**
+- Weekly site visits by project manager
+- Monthly progress meetings with contractor
+- Review monthly progress reports
+- Approve payment certificates
+- Manage stakeholder communications
+- Resolve issues and disputes
+- Monitor budget and schedule
+
+**Key Construction Milestones:**
+- Month 18: Site preparation complete, foundations started
+- Month 22: Civil works 50% complete
+- Month 26: Turbine/generator installation begins
+- Month 30: Electrical infrastructure complete
+- Month 32: Testing and commissioning begins
+- Month 34: Commercial operation date (COD)
+
+**Quality Assurance Program:**
+- Material testing for all critical components
+- Welding inspection and testing
+- Concrete strength testing
+- Equipment factory acceptance tests
+- Installation inspection checklists
+- Independent third-party verification
+
+**Health, Safety & Environment Management:**
+- Weekly safety meetings and toolbox talks
+- Monthly safety audits and inspections
+- Incident reporting and investigation system
+- Environmental compliance monitoring
+- Dust, noise, and vibration monitoring
+- Water quality testing program
+- Grievance mechanism for community complaints
+
+#### 4.3 Local Employment and Procurement
+
+**Local Content Strategy:**
+
+**Employment Targets:**
+- Unskilled labor: 80-100% local hiring
+- Semi-skilled: 50-70% local
+- Skilled: 30-50% local
+- Management: Competency-based
+
+**Target: Create [200-500] construction jobs over 18 months**
+
+**Local Procurement:**
+- Aggregates, sand, cement: 100% local
+- Timber and basic materials: 80%+ local
+- Food services and accommodation: 100% local
+- Transportation and logistics: 70%+ local
+
+**Capacity Building:**
+- Provide training to local workers
+- Apprenticeship programs for youth
+- Skills certification partnerships with technical schools
+- Mentorship from experienced workers
+
+---
+
+### PHASE 5: COMMISSIONING & HANDOVER (Months 33-36)
+
+#### 5.1 Testing and Commissioning
+
+**Pre-Commissioning Tests:**
+- Individual equipment testing (motors, pumps, valves)
+- Instrument calibration and loop checks
+- Control system logic testing
+- Safety system testing
+- Communication system verification
+
+**Commissioning Sequence:**
+1. Dry commissioning (no water/steam flow)
+2. Wet commissioning (water circulation without power generation)
+3. Initial synchronization with grid
+4. Performance testing at various load levels
+5. Full load testing for 72 continuous hours
+6. Acceptance tests per contract specifications
+
+**Performance Testing:**
+- Verify guaranteed power output: {power['total_mw']:.2f} MW
+- Efficiency measurements
+- Grid code compliance testing
+- Environmental emissions verification (noise, vibration)
+- Safety systems verification
+
+**Documentation:**
+- As-built drawings for all systems
+- Operations and maintenance manuals
+- Training materials for plant operators
+- Emergency response procedures
+- Spare parts catalog and inventory
+- Warranty documentation
+
+#### 5.2 Operations Preparation
+
+**Staffing and Training:**
+
+**Permanent Operations Team:**
+- Plant Manager (1)
+- Shift Supervisors (3-4)
+- Control Room Operators (6-8 for 24/7 coverage)
+- Maintenance Technicians (4-6)
+- Electricians (2-3)
+- Administrative Staff (2-3)
+
+**Total permanent jobs: 20-25 positions**
+
+**Training Program:**
+- Classroom training on theory and systems
+- Hands-on training during commissioning
+- Simulator training (if available)
+- Manufacturer training on specialized equipment
+- Safety and emergency response training
+- Environmental compliance training
+
+**Operational Readiness:**
+- Establish 24/7 operations schedule
+- Stock initial spare parts inventory
+- Set up SCADA monitoring and control
+- Establish maintenance schedule and procedures
+- Create performance reporting systems
+- Set up billing and revenue collection
+
+#### 5.3 Commercial Operation and Handover
+
+**Commercial Operation Date (COD) Requirements:**
+- Complete performance testing successfully
+- All regulatory approvals and clearances obtained
+- Grid connection fully operational
+- Operations team trained and in place
+- PPA in effect with first power sale
+- All safety systems verified
+- Insurance policies active
+
+**Handover Process:**
+- Final acceptance certificate issued
+- Defects liability period begins (typically 1 year)
+- Warranty periods start
+- Final payment to contractor (after retention)
+- Transfer of all documentation
+- Demobilization of construction facilities
+
+**First Year Operations:**
+- Warranty period monitoring
+- Performance optimization
+- Defects rectification
+- Operations team skill development
+- Maintenance regime establishment
+- Community benefit delivery begins
+
+---
+
+### PHASE 6: LONG-TERM OPERATIONS & EXPANSION (Years 2-30)
+
+#### 6.1 Performance Monitoring and Optimization
+
+**Key Performance Indicators (KPIs):**
+- Availability: Target >95% (percentage of time plant can generate)
+- Capacity Factor: Target >85% (actual vs. theoretical generation)
+- Forced Outage Rate: Target <2% (unplanned shutdowns)
+- Energy Generation: {power['annual_energy_mwh']:,.0f} MWh/year target
+- Revenue Collection: >98% of billed amount
+- Safety: Zero lost-time injuries
+
+**Continuous Improvement:**
+- Annual performance reviews
+- Benchmarking against similar facilities
+- Technology upgrades as available
+- Process optimization initiatives
+- Predictive maintenance implementation
+
+#### 6.2 Community Benefit Distribution
+
+**Community Benefit Fund Structure:**
+- Allocate 2-5% of annual revenue to community fund
+- Estimated annual fund: $[Calculate based on revenue]
+- Governance by community committee
+- Transparent application and selection process
+
+**Eligible Projects:**
+- School infrastructure and scholarships
+- Healthcare facilities and programs
+- Community center upgrades
+- Sports and recreation facilities
+- Small business development programs
+- Environmental conservation initiatives
+
+#### 6.3 Expansion and Replication
+
+**Lessons Learned Documentation:**
+- What worked well in this project?
+- What challenges were encountered and how were they overcome?
+- How can the process be improved for future projects?
+- What local capacity was built?
+
+**Replication Strategy:**
+- Identify other suitable sites in the region
+- Use this project as demonstration for others
+- Package lessons learned for other municipalities
+- Create template documents (RFPs, contracts, etc.)
+- Offer technical assistance to neighboring cities
+
+**Expansion Opportunities:**
+- Add more turbines if resource allows
+- Integrate battery storage for grid stability
+- Add solar PV on facility buildings
+- Develop mini-grid for nearby communities
+- Create renewable energy hub with multiple technologies
+
+---
+
+## CRITICAL SUCCESS FACTORS FOR CITY PLANNERS
+
+### 1. **Strong Project Governance**
+- Clear decision-making authority
+- Dedicated and empowered project team
+- Regular stakeholder coordination
+- Transparent processes and documentation
+
+### 2. **Community Buy-In**
+- Early and continuous engagement
+- Address concerns proactively
+- Deliver tangible benefits
+- Maintain open communication channels
+
+### 3. **Technical Excellence**
+- Hire experienced consultants and contractors
+- Independent verification at key stages
+- Don't cut corners on quality
+- Learn from international best practices
+
+### 4. **Financial Sustainability**
+- Conservative financial projections
+- Diversified funding sources
+- Adequate contingency reserves
+- Strong revenue collection mechanisms
+
+### 5. **Regulatory Compliance**
+- Start permit processes early
+- Maintain good relations with regulators
+- Document everything thoroughly
+- Plan for regulatory delays
+
+### 6. **Risk Management**
+- Identify risks early and continuously
+- Develop mitigation strategies
+- Transfer appropriate risks to contractors
+- Maintain adequate insurance
+
+### 7. **Capacity Building**
+- Invest in staff training
+- Build local technical capacity
+- Create knowledge management systems
+- Document processes for future projects
+
+---
+
+## INTEGRATION WITH BROADER CITY PLANNING
+
+### Urban Development Synergies
+
+**Land Use Planning:**
+- Designate renewable energy zones in city master plan
+- Protect sites from conflicting development
+- Plan transmission corridors in advance
+- Integrate with green space and conservation areas
+
+**Economic Development:**
+- Attract energy-intensive industries with reliable power
+- Market city as sustainable development destination
+- Create green jobs and skills training programs
+- Develop eco-tourism opportunities around facilities
+
+**Climate Action Plan:**
+- This project contributes to municipal emissions reduction targets
+- Include in city's Nationally Determined Contribution (NDC)
+- Use as flagship project for climate resilience
+- Leverage for international climate finance access
+
+**Infrastructure Master Planning:**
+- Coordinate with electrical grid expansion plans
+- Align with water resources management strategy
+- Integrate with transportation infrastructure development
+- Plan for future energy storage facilities
+
+### Regional Coordination
+
+**Multi-Municipal Collaboration:**
+- Share costs and benefits with neighboring municipalities
+- Joint procurement for larger economies of scale
+- Regional transmission infrastructure development
+- Shared technical capacity and expertise
+
+**Provincial/National Alignment:**
+- Align with national renewable energy targets
+- Coordinate with provincial development plans
+- Access regional development funds
+- Participate in national energy planning processes
+
+---
+
+## RISK REGISTER AND MITIGATION STRATEGIES
+
+### Technical Risks
+
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
+| Resource variability (water flow, geothermal temp) | Medium | High | Conservative design, 10% contingency in calculations |
+| Equipment performance below guarantee | Low | High | Strong warranties, performance bonds, factory testing |
+| Grid connection delays | Medium | Medium | Early engagement with grid operator, backup plans |
+| Geological surprises | Medium | High | Thorough surveys, geotechnical contingency budget |
+
+### Financial Risks
+
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
+| Cost overruns | Medium | High | Fixed-price EPC contract, 15% contingency reserve |
+| Funding gaps | Medium | Critical | Diversified funding sources, staged development |
+| Revenue shortfall (lower tariffs) | Low | Medium | Long-term PPA, take-or-pay provisions |
+| Currency fluctuation | Medium | Medium | Local currency contracts, hedging strategies |
+
+### Social/Political Risks
+
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
+| Community opposition | Low | Critical | Early engagement, benefit sharing, grievance mechanism |
+| Change in government/policy | Medium | Medium | Legal protections, multi-party agreements |
+| Land acquisition disputes | Medium | High | Fair compensation, voluntary transactions preferred |
+| Labor disputes | Low | Medium | Fair wages, good working conditions, dialogue |
+
+### Environmental Risks
+
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
+| EIA rejection/delays | Low | High | Quality studies, early consultation with authorities |
+| Unforeseen environmental impacts | Low | Medium | Robust monitoring, adaptive management |
+| Climate change affects resource | Low | High | Climate projections in design, adaptive capacity |
+| Natural disasters (floods, earthquakes) | Low | Critical | Appropriate structural design, insurance coverage |
+
+---
+
+## TOOLS AND TEMPLATES FOR CITY PLANNERS
+
+### Project Management Templates
+
+1. **Project Charter Template** - Defines scope, objectives, governance
+2. **Stakeholder Register** - Tracks all stakeholders and engagement activities
+3. **Permit Tracking Matrix** - Monitors status of all regulatory approvals
+4. **Risk Register** - Documents risks, probabilities, impacts, and mitigations
+5. **Issues Log** - Tracks problems and their resolution
+6. **Change Order Register** - Manages variations to contracts
+7. **Monthly Progress Report Template** - Standardized reporting format
+8. **Lessons Learned Template** - Captures knowledge for future projects
+
+### Financial Tools
+
+1. **Cost Estimation Spreadsheet** - Detailed CAPEX and OPEX breakdown
+2. **Financial Model** - 30-year cash flow projection with sensitivity
+3. **Funding Strategy Matrix** - Tracks all funding sources and status
+4. **Budget vs. Actual Tracker** - Monitors spending against budget
+5. **Economic Analysis Tool** - Calculates NPV, IRR, payback period
+
+### Technical Documents
+
+1. **Terms of Reference** - For hiring consultants
+2. **RFP Template** - For contractor procurement
+3. **Technical Specifications** - Equipment and performance requirements
+4. **Quality Assurance Checklists** - For construction oversight
+5. **Commissioning Procedures** - Step-by-step testing protocols
+
+---
+
+## DECISION POINTS FOR CITY COUNCIL APPROVAL
+
+Throughout implementation, certain decisions require formal city council approval:
+
+### Initial Approval (Month 1)
+- ✅ Project concept approval
+- ✅ Budget allocation for feasibility studies
+- ✅ Appointment of project team
+
+### Go/No-Go Decision (Month 9)
+- ✅ Approval of final project design
+- ✅ Authorization to proceed to procurement
+- ✅ Approval of financing plan and municipal contribution
+
+### Contract Award (Month 15)
+- ✅ Approval of contractor selection
+- ✅ Authorization to sign EPC contract
+- ✅ Approval of PPA terms
+
+### Construction Start (Month 16)
+- ✅ Final authorization to commence construction
+- ✅ Approval of community benefit agreement
+
+### Additional Approvals as Needed
+- ✅ Major contract variations (if >10% of value)
+- ✅ Changes to project scope or timeline
+- ✅ Additional funding requirements
+
+**Recommendation:** Establish delegated authority for project manager to approve minor decisions (<$50K) to maintain project momentum.
+
+---
+
+This comprehensive roadmap positions city planners to successfully navigate the complex process of bringing this renewable energy project from concept to reality, delivering clean power and avoiding significant CO₂ emissions annually.
+"""
+    
+    # Add conclusion section
+    total_mw = power['total_mw']
+    households_powered = community['households_powered']
+    carbon_saved = env['carbon_saved_tons']
+    lat = data['coordinates']['latitude']
+    lng = data['coordinates']['longitude']
+    
+    report += f"""
 
 ---
 
@@ -433,9 +1271,9 @@ The {location} renewable energy project is more than just a power plant—it's a
 
 ### What We're Building:
 
-✅ **Clean Energy:** {power['total_mw']:.2f} MW of zero-emission power  
-✅ **Community Power:** Electricity for {community['households_powered']:,} households  
-✅ **Environmental Protection:** {env['carbon_saved_tons']:,.0f} tons of CO₂ avoided annually  
+✅ **Clean Energy:** {total_mw:.2f} MW of zero-emission power  
+✅ **Community Power:** Electricity for {households_powered:,} households  
+✅ **Environmental Protection:** {carbon_saved:,.0f} tons of CO₂ avoided annually  
 ✅ **Economic Development:** Jobs, lower costs, and new opportunities  
 ✅ **Energy Independence:** Freedom from fossil fuel price volatility  
 ✅ **Generational Impact:** Clean air and stable power for decades to come
@@ -452,9 +1290,6 @@ Whether you're a government official who can facilitate permits, a community mem
 
 ---
 
-
-
----
 
 *This report was generated by EcoGrid AI Report Generator*  
 *Technical data verified and calculations validated*  
