@@ -1,0 +1,24 @@
+# Community Energy Toolkit - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Framework
+streamlit>=1.28.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+plotly>=5.14.0
+folium>=0.14.0
+streamlit-folium>=0.13.0
+
+# PDF Processing
+PyPDF2>=3.0.0
+
+# Machine Learning (for LSTM Predictor)
+tensorflow>=2.13.0
+scikit-learn>=1.3.0
+
+# Utilities
+matplotlib>=3.7.0
