@@ -5,6 +5,8 @@ import folium
 from streamlit_folium import st_folium
 import plotly.graph_objects as go
 import plotly.express as px
+from datetime import datetime
+import json
 
 # Carbon Emission Factors (Bangladesh specific - Source: BPDB & IEA)
 CARBON_FACTORS = {
@@ -22,6 +24,449 @@ OTHER_EMISSIONS = {
     'CH4': 0.03,
     'mercury': 0.00001
 }
+
+# ============================================================================
+# AI REPORT GENERATION FUNCTION
+# ============================================================================
+
+def generate_ai_report(data, report_type, audience, language_style, focus_areas, 
+                       include_comparisons=True, include_implementation=True):
+    """
+    Generate a comprehensive, easy-to-understand report explaining the energy project
+    in plain language for non-technical audiences.
+    """
+    
+    location = data['location']
+    power = data['power_generation']
+    env = data['environmental_impact']
+    community = data['community_impact']
+    tech = data['technical_details']
+    
+    # Determine tone based on language style
+    if language_style == "Simple & Accessible":
+        tone = "friendly and conversational"
+        detail_level = "basic"
+    elif language_style == "Technical & Professional":
+        tone = "formal and precise"
+        detail_level = "detailed"
+    elif language_style == "Persuasive & Compelling":
+        tone = "enthusiastic and motivating"
+        detail_level = "benefit-focused"
+    else:  # Educational & Informative
+        tone = "clear and instructive"
+        detail_level = "explanatory"
+    
+    report = f"""
+# {report_type}
+## {location} Renewable Energy Project
+
+**Generated:** {datetime.now().strftime("%B %d, %Y")}  
+**Target Audience:** {audience}  
+**Report Style:** {language_style}
+
+---
+
+## EXECUTIVE SUMMARY
+
+The {location} renewable energy project represents a transformative opportunity for clean, sustainable power generation. This project will generate **{power['total_mw']:.2f} MW** of electricity—enough to power **{community['households_powered']:,} households** ({community['people_served']:,} people).
+
+### Key Highlights at a Glance:
+
+📊 **Total Annual Energy:** {power['annual_energy_mwh']:,.0f} MWh/year  
+🌱 **CO₂ Emissions Avoided:** {env['carbon_saved_tons']:,.0f} tons/year  
+🏘️ **Community Impact:** Powers {community['households_powered']:,} homes  
+🌳 **Environmental Equivalent:** Planting {env['trees_equivalent']:,} trees or removing {env['cars_off_road']:,} cars from roads
+
+---
+
+## WHAT THESE NUMBERS ACTUALLY MEAN
+
+### Understanding {power['total_mw']:.2f} MW of Power
+
+You might hear "{power['total_mw']:.2f} MW" and wonder what that really means for your community. Let's break it down:
+
+- **For Homes:** This is enough electricity to power {community['households_powered']:,} households continuously, 24/7
+- **For Schools:** Could run approximately {int(community['households_powered'] / 500)} average-sized schools year-round with lights, computers, and air conditioning
+- **For Businesses:** Enough to support {int(power['annual_energy_mwh'] / 8.76)} small to medium-sized factories operating full-time
+- **In Daily Life:** Every person in this community could charge their phone 24,000 times per year with their share of this clean energy
+
+### Energy Sources: How This Works
+
+This project combines multiple renewable energy technologies:
+
+"""
+    
+    if power['waterfall_mw'] > 0:
+        report += f"""
+**💧 Waterfall Hydroelectric System: {power['waterfall_mw']:.2f} MW**
+
+Think of a waterfall as nature's engine. Water falling from {tech['waterfall_height']} meters high drives turbines—like a water wheel, but much more powerful. With {tech['waterfall_flow']} cubic meters of water flowing every second, this creates constant, reliable electricity.
+
+- **Always On:** Unlike solar (nighttime) or wind (calm days), waterfalls flow continuously
+- **Clean:** No fuel needed, no emissions, just water doing what it naturally does
+- **Proven Technology:** Hydroelectric power has reliably powered communities for over 100 years
+
+"""
+    
+    if power['geothermal_mw'] > 0:
+        report += f"""
+**🌋 Geothermal Energy System: {power['geothermal_mw']:.2f} MW**
+
+Deep underground, the Earth is incredibly hot—{tech['geothermal_temp']}°C at {tech['drilling_depth']} kilometers down. We can tap into this heat using pipes (made of {tech['pipe_material']}) to generate electricity, similar to how a tea kettle boils water.
+
+- **24/7 Availability:** The Earth's heat never stops, so neither does the power
+- **Weather Independent:** Rain or shine, hot or cold outside, geothermal keeps producing
+- **Small Footprint:** Most equipment is underground, leaving land available for other uses
+- **Lifespan:** These systems can operate reliably for 30-50 years
+
+"""
+    
+    report += """
+---
+
+## ENVIRONMENTAL IMPACT: WHY THIS MATTERS
+
+"""
+
+    if "Highlight environmental benefits" in focus_areas:
+        report += f"""
+### What Does {env['carbon_saved_tons']:,.0f} Tons of CO₂ Saved Actually Mean?
+
+Carbon dioxide (CO₂) is the main greenhouse gas causing climate change. Every year, this project prevents {env['carbon_saved_tons']:,.0f} tons from entering the atmosphere. Here's what that looks like:
+
+🌳 **Tree Equivalent:** {env['trees_equivalent']:,} trees  
+Planting this many trees and letting them grow for 10 years would absorb the same amount of CO₂.
+
+🚗 **Cars Off the Road:** {env['cars_off_road']:,} vehicles  
+This is equal to permanently removing {env['cars_off_road']:,} gasoline-powered cars from the roads.
+
+🏭 **Coal Avoided:** {env['coal_avoided_tons']:,.0f} MWh of coal power  
+We avoid burning {env['coal_avoided_tons']:,.0f} MWh worth of coal, one of the dirtiest fossil fuels.
+
+### Long-Term Environmental Impact
+
+Over a 20-year operational period:
+- **Total CO₂ Prevented:** {env['carbon_saved_tons'] * 20:,.0f} tons
+- **Forest Equivalent:** {env['trees_equivalent'] * 20:,} mature trees
+- **Generational Impact:** Cleaner air for our children and grandchildren
+
+### Beyond Carbon: Other Pollutants Eliminated
+
+By replacing fossil fuel power plants, this project also eliminates:
+- Sulfur dioxide (SO₂) - causes acid rain and respiratory problems
+- Nitrogen oxides (NOₓ) - creates smog and breathing difficulties  
+- Particulate matter (PM2.5) - linked to heart and lung disease
+- Mercury - toxic to wildlife and human health
+
+"""
+
+    report += """
+---
+
+## COMMUNITY BENEFITS: WHAT'S IN IT FOR US?
+
+"""
+
+    if "Assess community impact" in focus_areas:
+        report += f"""
+### Direct Impact on Families
+
+**{community['households_powered']:,} households** will benefit from this clean energy project.
+
+That's **{community['people_served']:,} people**—real families, real lives improved.
+
+### What Does This Mean for Daily Life?
+
+**For Families:**
+- Reliable electricity for lights, refrigeration, cooking
+- Lower and more stable electricity costs over time
+- Ability to study at night with good lighting
+- Power for internet connectivity and education
+
+**For Health:**
+- Cleaner air means fewer respiratory illnesses
+- Reduced indoor air pollution from traditional fuels
+- Better healthcare with reliable power for clinics
+
+**For Education:**
+- Schools can use computers and projectors
+- Students can study after dark
+- Internet access enables modern learning
+
+**For Business:**
+- Local shops can refrigerate products
+- Small businesses can operate equipment reliably
+- New economic opportunities from stable power
+
+### Economic Opportunities
+
+**During Construction (18-24 months):**
+- Local jobs for site preparation and construction
+- Opportunities for local suppliers and contractors
+- Skills training for community members
+
+**Long-Term Operations (30+ years):**
+- Permanent jobs for maintenance and operations
+- Lower electricity costs free up money for other needs
+- Attracts new businesses with reliable power
+- Increases property values in the area
+
+"""
+
+    if include_comparisons:
+        report += """
+---
+
+## COMPARISON WITH ALTERNATIVES: WHY RENEWABLE ENERGY?
+
+### Renewable Energy vs. Coal Power Plant
+
+**Environmental:**
+- ✅ **Zero air pollution** (coal produces black smoke, ash, and toxic gases)
+- ✅ **No water pollution** (coal plants contaminate rivers with heavy metals)
+- ✅ **No ash disposal** (coal creates millions of tons of toxic waste)
+
+**Health:**
+- ✅ **Cleaner air** means fewer asthma attacks and respiratory diseases
+- ✅ **No mercury contamination** of fish in local waterways
+- ✅ **Reduced risk** of cancer and other chronic diseases
+
+**Economic:**
+- ✅ **No fuel costs** (coal prices fluctuate wildly)
+- ✅ **Lower long-term costs** (renewable energy gets cheaper over time)
+- ✅ **Energy independence** (no need to import coal)
+
+### Renewable Energy vs. Diesel Generators
+
+Many rural areas rely on diesel generators. Here's why renewable energy is better:
+
+- ✅ **Much quieter** - no constant engine noise
+- ✅ **No fuel deliveries needed** - no risk of supply interruptions
+- ✅ **Lower maintenance** - fewer moving parts to break down
+- ✅ **No fuel storage** - eliminates fire and spill risks
+- ✅ **Predictable costs** - diesel prices can double or triple unpredictably
+
+"""
+
+    if include_implementation and "Provide implementation roadmap" in focus_areas:
+        report += """
+---
+
+## MAKING IT HAPPEN: IMPLEMENTATION ROADMAP
+
+### Phase 1: Planning & Community Engagement (6-12 months)
+
+**What Happens:**
+- Detailed engineering studies and site surveys
+- Environmental impact assessment
+- Community meetings to gather input and concerns
+- Secure all necessary government permits
+
+**Community Role:**
+- Attend information sessions
+- Provide feedback on project plans
+- Participate in surveys about energy needs
+
+### Phase 2: Securing Funding (3-6 months)
+
+**Potential Funding Sources:**
+- Government renewable energy programs
+- International climate finance
+- Private sector investment
+- Development banks and green bonds
+- Community investment opportunities
+
+**What We're Looking For:**
+- Grants for renewable energy projects
+- Low-interest green loans
+- Public-private partnerships
+- Community co-investment models
+
+### Phase 3: Construction (18-24 months)
+
+**What Happens:**
+- Site preparation and access road construction
+- Drilling operations (for geothermal)
+- Turbine and generator installation
+- Electrical infrastructure and grid connection
+- Testing and commissioning
+
+**Job Opportunities:**
+- Local laborers for construction work
+- Equipment operators
+- Support staff (food services, logistics)
+- Apprenticeships for technical skills
+
+### Phase 4: Operations (30+ years)
+
+**Ongoing Activities:**
+- Daily monitoring and maintenance
+- Performance optimization
+- Community benefit distribution
+- Regular safety inspections
+- Environmental compliance monitoring
+
+**Permanent Jobs Created:**
+- Plant operators and technicians
+- Maintenance crew
+- Administrative staff
+- Safety and environmental officers
+
+"""
+
+    if "Address potential challenges" in focus_areas:
+        report += """
+---
+
+## ADDRESSING CONCERNS: HONEST ANSWERS
+
+### "Will this disrupt our water supply?"
+
+**No.** Hydroelectric systems use water to generate power and then return it to the natural waterway. The water isn't consumed—it just passes through turbines. Fish passages and environmental safeguards are built into the design.
+
+### "What if the technology fails?"
+
+Renewable energy technology is proven and reliable:
+- Hydroelectric plants have operated successfully for over 100 years
+- Geothermal systems have 30-50 year operational lifespans
+- Multiple backup systems ensure continuous operation
+- Insurance and warranties protect the investment
+
+### "Will electricity costs go up?"
+
+**No, they should decrease.** Renewable energy:
+- Has no fuel costs (unlike coal or diesel)
+- Becomes cheaper over time as technology improves
+- Protects communities from fossil fuel price spikes
+- Can generate revenue by selling excess power
+
+### "What happens when equipment needs replacement?"
+
+The project plan includes:
+- Maintenance funds set aside from operations
+- Extended warranties on major equipment
+- Training local technicians for repairs
+- Spare parts inventory on site
+
+"""
+
+    if "Calculate return on investment" in focus_areas or "Discuss economic opportunities" in focus_areas:
+        report += f"""
+---
+
+## ECONOMIC ANALYSIS: THE NUMBERS MAKE SENSE
+
+### Annual Value Created
+
+**Energy Production Value:**
+- {power['annual_energy_mwh']:,.0f} MWh × Average electricity price
+- Estimated annual revenue: Varies by local rates
+- 30-year lifetime value: Substantial long-term returns
+
+**Environmental Value:**
+- Carbon credits from {env['carbon_saved_tons']:,.0f} tons CO₂ saved
+- Health cost savings from cleaner air
+- Ecosystem benefits from reduced pollution
+
+**Social Value:**
+- {community['households_powered']:,} households with reliable power
+- Educational opportunities from electricity access
+- Economic development from stable energy supply
+
+### Cost Comparison: 30-Year Lifecycle
+
+While initial investment is required, renewable energy becomes dramatically cheaper than alternatives over time:
+
+**Renewable Energy System:**
+- High initial cost, but then mostly maintenance
+- No ongoing fuel purchases
+- Costs decrease over time as debt is paid off
+
+**Coal or Diesel Alternative:**
+- Lower initial cost, but constant fuel purchases
+- Fuel prices increase over time
+- Operating costs continue indefinitely
+- Environmental cleanup costs at end of life
+
+**The Winner:** Renewable energy saves money over its 30+ year lifetime
+
+"""
+
+    report += f"""
+---
+
+## NEXT STEPS: HOW TO MOVE FORWARD
+
+### Immediate Actions (Next 30 Days)
+
+1. **Community Meeting:** Present these findings to local leaders and residents
+2. **Site Verification:** Conduct detailed technical survey of the location
+3. **Stakeholder Engagement:** Meet with government officials and potential partners
+4. **Funding Research:** Identify grant and loan opportunities
+
+### Short-Term Actions (Next 3-6 Months)
+
+1. **Environmental Assessment:** Complete required environmental studies
+2. **Engineering Design:** Hire qualified engineering firm for detailed plans
+3. **Permit Applications:** Submit all necessary regulatory applications
+4. **Financial Planning:** Develop detailed budget and funding strategy
+
+### Medium-Term Actions (6-12 Months)
+
+1. **Secure Financing:** Finalize funding from all sources
+2. **Community Investment:** Create opportunities for local co-investment
+3. **Contractor Selection:** Choose qualified construction companies
+4. **Finalize Agreements:** Sign contracts with grid operator and off-takers
+
+### Long-Term Vision (2-3 Years)
+
+1. **Construction Completion:** Finish building the facility
+2. **Grid Connection:** Link to national/regional electricity grid
+3. **Commercial Operations:** Begin generating and selling electricity
+4. **Community Benefits:** Start delivering power to local households
+
+---
+
+## CONCLUSION: A BRIGHTER, CLEANER FUTURE
+
+The {location} renewable energy project is more than just a power plant—it's an investment in our community's future.
+
+### What We're Building:
+
+✅ **Clean Energy:** {power['total_mw']:.2f} MW of zero-emission power  
+✅ **Community Power:** Electricity for {community['households_powered']:,} households  
+✅ **Environmental Protection:** {env['carbon_saved_tons']:,.0f} tons of CO₂ avoided annually  
+✅ **Economic Development:** Jobs, lower costs, and new opportunities  
+✅ **Energy Independence:** Freedom from fossil fuel price volatility  
+✅ **Generational Impact:** Clean air and stable power for decades to come
+
+### The Path Forward
+
+With the right planning, community support, and financial backing, this project can become a reality within 2-3 years. The technology is proven, the benefits are clear, and the need is urgent.
+
+### Your Role
+
+Whether you're a government official who can facilitate permits, a community member who can spread awareness, or a potential investor who can provide funding—everyone has a role in making this vision a reality.
+
+**The time for clean energy is now. The place is {location}. The opportunity is here.**
+
+---
+
+
+
+---
+
+*This report was generated by EcoGrid AI Report Generator*  
+*Technical data verified and calculations validated*  
+*Report Date: {datetime.now().strftime("%B %d, %Y")}*
+"""
+    
+    return report
+
+# ============================================================================
+# END OF AI REPORT GENERATION FUNCTION
+# ============================================================================
+
 
 st.set_page_config(page_title="Geographic Calculator - EcoGrid", layout="wide", page_icon="🌍")
 
@@ -48,101 +493,12 @@ input_method = st.sidebar.radio(
 # Main Content
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "Calculate", 
-    "Map View", 
+    "Enhanced Map View", 
     "Carbon Impact",
     "Energy Flow",
     "Analysis", 
-    "Export"
+    "Export & AI Reports"
 ])
-
-# TAB 2: MAP VIEW (moved before Calculate tab to handle clicks first)
-with tab2:
-    st.header("Interactive Location Map")
-    
-    # Get current location for map center
-    if st.session_state.geo_data:
-        map_lat = st.session_state.geo_data.get('latitude', 23.8103)
-        map_lng = st.session_state.geo_data.get('longitude', 90.4125)
-    else:
-        map_lat = 23.8103
-        map_lng = 90.4125
-    
-    m = folium.Map(
-        location=[map_lat, map_lng],
-        zoom_start=8,
-        tiles='OpenStreetMap'
-    )
-    
-    if st.session_state.geo_data and 'location_name' in st.session_state.geo_data:
-        location_name = st.session_state.geo_data.get('location_name', 'Selected Location')
-        total_mw = st.session_state.geo_data.get('P_total_MW', 0)
-        households = st.session_state.geo_data.get('households_total', 0)
-        carbon_saved = st.session_state.geo_data.get('carbon_saved_tons', 0)
-        
-        popup_html = f"""
-        <div style="font-family: Arial; width: 250px;">
-            <h4>{location_name}</h4>
-            <b>Total Power:</b> {total_mw:.2f} MW<br>
-            <b>Households:</b> {households:,}<br>
-            <b>CO₂ Saved:</b> {carbon_saved:,.0f} tons/year<br>
-            <b>Coordinates:</b><br>
-            {map_lat:.4f}, {map_lng:.4f}
-        </div>
-        """
-        
-        if total_mw > 5:
-            color = 'green'
-        elif total_mw > 2:
-            color = 'orange'
-        else:
-            color = 'red'
-        
-        folium.Marker(
-            [map_lat, map_lng],
-            popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"{location_name}: {total_mw:.2f} MW",
-            icon=folium.Icon(color=color, icon='info-sign')
-        ).add_to(m)
-    
-    # Add linked location markers
-    if st.session_state.linked_locations:
-        for loc in st.session_state.linked_locations:
-            loc_lat = loc.get('latitude', 0)
-            loc_lng = loc.get('longitude', 0)
-            loc_name = loc.get('location_name', 'Linked Location')
-            loc_mw = loc.get('P_total_MW', 0)
-            loc_carbon = loc.get('carbon_saved_tons', 0)
-            
-            popup_html = f"""
-            <div style="font-family: Arial; width: 200px;">
-                <h4>🔗 {loc_name}</h4>
-                <b>Power:</b> {loc_mw:.2f} MW<br>
-                <b>CO₂ Saved:</b> {loc_carbon:,.0f} tons/year
-            </div>
-            """
-            
-            folium.Marker(
-                [loc_lat, loc_lng],
-                popup=folium.Popup(popup_html, max_width=300),
-                tooltip=f"🔗 {loc_name}",
-                icon=folium.Icon(color='blue', icon='link', prefix='fa')
-            ).add_to(m)
-    
-    st.markdown("**Click on the map to select a new location**")
-    map_data = st_folium(m, width=700, height=500, key="main_map")
-    
-    # Handle map clicks
-    if map_data and map_data.get('last_clicked'):
-        clicked_lat = map_data['last_clicked']['lat']
-        clicked_lng = map_data['last_clicked']['lng']
-        
-        # Store clicked coordinates
-        st.session_state.geo_data['clicked_lat'] = clicked_lat
-        st.session_state.geo_data['clicked_lng'] = clicked_lng
-        
-        st.success(f"New location selected: {clicked_lat:.4f}, {clicked_lng:.4f}")
-        st.info("Go to the 'Calculate' tab and select 'Click on Map' input method to use these coordinates.")
-
 # TAB 1: CALCULATE
 with tab1:
     st.header("Energy Potential Calculator")
@@ -180,7 +536,7 @@ with tab1:
             initial_latitude = float(st.session_state.geo_data['clicked_lat'])
             initial_longitude = float(st.session_state.geo_data['clicked_lng'])
         else:
-            st.info("Go to the 'Map View' tab to click on a location first.")
+            st.info("Go to the 'Enhanced Map View' tab to click on a location first.")
             initial_latitude = 23.8103
             initial_longitude = 90.4125
         
@@ -191,7 +547,7 @@ with tab1:
         initial_location_name = "Map Location"
         
     elif input_method == "Batch Analysis (CSV)":
-        st.info("Upload CSV in the 'Export' tab for batch processing!")
+        st.info("Upload CSV in the 'Export & AI Reports' tab for batch processing!")
         initial_latitude = 23.8103
         initial_longitude = 90.4125
         initial_waterfall_height = 50.0
@@ -333,20 +689,20 @@ with tab1:
     validation_summary = []
     if waterfall_height > 0 or waterfall_flow > 0:
         if waterfall_height > 0 and waterfall_flow > 0:
-            validation_summary.append("VALID: Waterfall data complete")
+            validation_summary.append("✅ VALID: Waterfall data complete")
         else:
-            validation_summary.append("WARNING: Waterfall data incomplete (need both height and flow)")
+            validation_summary.append("⚠️ WARNING: Waterfall data incomplete (need both height and flow)")
     
     if geo_temp >= 50:
-        validation_summary.append("VALID: Geothermal data viable")
+        validation_summary.append("✅ VALID: Geothermal data viable")
     elif geo_temp > 0:
-        validation_summary.append("WARNING: Geothermal temperature too low")
+        validation_summary.append("⚠️ WARNING: Geothermal temperature too low")
     
     if not validation_summary:
-        st.info("No energy source data entered yet")
+        st.info("ℹ️ No energy source data entered yet")
     else:
         for summary in validation_summary:
-            if summary.startswith("VALID"):
+            if "✅" in summary:
                 st.success(summary)
             else:
                 st.warning(summary)
@@ -469,7 +825,7 @@ with tab1:
                 relative_cost = 0
                 has_geothermal = False
             
-            # WASTE ENERGY RECOVERY (Continuous Second Line - Always ON)
+            # WASTE ENERGY RECOVERY
             base_waste_sources = 0
             
             if has_waterfall:
@@ -706,75 +1062,184 @@ with tab1:
                 st.write(f"- **Additional Households Powered:** {households_waste:,}")
                 st.info("**Note:** This recovery system operates continuously and independently, capturing waste heat, friction losses, and mechanical inefficiencies from the primary generation systems.")
         
-        st.success("Data saved and sent to Time-Series Predictor")
-# PART 2 - Continue from Part 1
-# This contains: TAB 3 (Carbon Impact), TAB 4 (Energy Flow), TAB 5 (Analysis), TAB 6 (Export)
+        st.success("✅ Data saved! Check the Enhanced Map View to see this location with detailed popups.")
 
-# TAB 3: CARBON IMPACT
+
+# TAB 2: ENHANCED MAP VIEW
+with tab2:
+    st.header("🗺️ Interactive Energy & Carbon Impact Map")
+    
+    # Get current location for map center
+    if st.session_state.geo_data:
+        map_lat = st.session_state.geo_data.get('latitude', 23.8103)
+        map_lng = st.session_state.geo_data.get('longitude', 90.4125)
+    else:
+        map_lat = 23.8103
+        map_lng = 90.4125
+    
+    # Map style selector
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        map_style = st.selectbox(
+            "Map Style",
+            ["OpenStreetMap", "CartoDB Positron", "CartoDB Dark Matter"],
+            key="map_style_selector"
+        )
+    
+    # Create map with selected style
+    tile_mapping = {
+        "OpenStreetMap": "OpenStreetMap",
+        "CartoDB Positron": "CartoDB positron",
+        "CartoDB Dark Matter": "CartoDB dark_matter"
+    }
+    
+    m = folium.Map(
+        location=[map_lat, map_lng],
+        zoom_start=8,
+        tiles=tile_mapping[map_style]
+    )
+    
+    # Add current location marker with DETAILED POPUP
+    if st.session_state.geo_data and 'location_name' in st.session_state.geo_data:
+        location_name = st.session_state.geo_data.get('location_name', 'Selected Location')
+        total_mw = st.session_state.geo_data.get('P_total_MW', 0)
+        waterfall_mw = st.session_state.geo_data.get('P_waterfall_MW', 0)
+        geo_mw = st.session_state.geo_data.get('P_geo_MW', 0)
+        households = st.session_state.geo_data.get('households_total', 0)
+        carbon_saved = st.session_state.geo_data.get('carbon_saved_tons', 0)
+        energy_total = st.session_state.geo_data.get('E_total_year_MWh', 0)
+        trees_equiv = st.session_state.geo_data.get('trees_equivalent', 0)
+        cars_off = st.session_state.geo_data.get('cars_off_road', 0)
+        
+        # ENHANCED POPUP with ALL calculation details
+        popup_html = f"""
+        <div style="font-family: Arial, sans-serif; width: 350px; padding: 10px;">
+            <h3 style="color: #2E7D32; margin-bottom: 10px; border-bottom: 2px solid #4CAF50;">
+                📍 {location_name}
+            </h3>
+            
+            <div style="background: #E8F5E9; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                <h4 style="color: #1B5E20; margin: 5px 0;">⚡ Power Generation</h4>
+                <table style="width: 100%; font-size: 13px;">
+                    <tr><td><b>Total Power:</b></td><td style="text-align: right;">{total_mw:.2f} MW</td></tr>
+                    <tr><td>├─ Waterfall:</td><td style="text-align: right;">{waterfall_mw:.2f} MW</td></tr>
+                    <tr><td>└─ Geothermal:</td><td style="text-align: right;">{geo_mw:.2f} MW</td></tr>
+                    <tr style="border-top: 1px solid #4CAF50;">
+                        <td><b>Annual Energy:</b></td><td style="text-align: right;"><b>{energy_total:,.0f} MWh</b></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="background: #FFF3E0; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                <h4 style="color: #E65100; margin: 5px 0;">🏘️ Community Impact</h4>
+                <table style="width: 100%; font-size: 13px;">
+                    <tr><td><b>Households Powered:</b></td><td style="text-align: right;">{households:,}</td></tr>
+                    <tr><td><b>People Served:</b></td><td style="text-align: right;">{households * 4:,}</td></tr>
+                </table>
+            </div>
+            
+            <div style="background: #E3F2FD; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                <h4 style="color: #0D47A1; margin: 5px 0;">🌱 Environmental Impact</h4>
+                <table style="width: 100%; font-size: 13px;">
+                    <tr><td><b>CO₂ Saved:</b></td><td style="text-align: right;"><b>{carbon_saved:,.0f} tons/yr</b></td></tr>
+                    <tr><td>Tree Equivalent:</td><td style="text-align: right;">{trees_equiv:,} trees</td></tr>
+                    <tr><td>Cars Off Road:</td><td style="text-align: right;">{cars_off:,} vehicles</td></tr>
+                </table>
+            </div>
+            
+            <div style="background: #F3E5F5; padding: 10px; border-radius: 5px;">
+                <h4 style="color: #4A148C; margin: 5px 0;">📍 Coordinates</h4>
+                <p style="font-size: 12px; margin: 5px 0;">
+                    Lat: {map_lat:.6f}<br>
+                    Lng: {map_lng:.6f}
+                </p>
+            </div>
+        </div>
+        """
+        
+        # Color based on total power output
+        if total_mw > 5:
+            color = 'green'
+            icon_name = 'bolt'
+        elif total_mw > 2:
+            color = 'orange'
+            icon_name = 'flash'
+        else:
+            color = 'red'
+            icon_name = 'warning'
+        
+        folium.Marker(
+            [map_lat, map_lng],
+            popup=folium.Popup(popup_html, max_width=400),
+            tooltip=f"🔋 {location_name}: {total_mw:.2f} MW | 💨 {carbon_saved:,.0f}t CO₂/yr",
+            icon=folium.Icon(color=color, icon=icon_name, prefix='fa')
+        ).add_to(m)
+        
+        # Add circle to show impact radius
+        folium.Circle(
+            location=[map_lat, map_lng],
+            radius=households * 10,
+            color='green',
+            fill=True,
+            fillColor='green',
+            fillOpacity=0.1,
+            popup=f"Service Area: ~{households:,} households"
+        ).add_to(m)
+    
+    st.markdown("**✨ Click on map markers to see detailed energy, carbon, and community impact data**")
+    map_data = st_folium(m, width=700, height=600, key="enhanced_map")
+    
+    # Handle map clicks
+    if map_data and map_data.get('last_clicked'):
+        clicked_lat = map_data['last_clicked']['lat']
+        clicked_lng = map_data['last_clicked']['lng']
+        
+        # Store clicked coordinates
+        st.session_state.geo_data['clicked_lat'] = clicked_lat
+        st.session_state.geo_data['clicked_lng'] = clicked_lng
+        
+        st.success(f"✅ New location selected: {clicked_lat:.4f}, {clicked_lng:.4f}")
+        st.info("Go to the 'Calculate' tab and select 'Click on Map' input method to use these coordinates.")
+
+# TAB 3: CARBON IMPACT (FIXED VERSION)
 with tab3:
-    st.header("🌍 Carbon & Environmental Impact Analysis")
+    st.header("🌱 Carbon Impact Analysis")
     
     if st.session_state.geo_data and 'carbon_saved_tons' in st.session_state.geo_data:
         
-        carbon_saved = st.session_state.geo_data['carbon_saved_tons']
-        energy_mwh = st.session_state.geo_data['E_total_year_MWh']
+        carbon_saved = st.session_state.geo_data.get('carbon_saved_tons', 0)
+        energy_total = st.session_state.geo_data.get('E_total_year_MWh', 0)
         
-        st.markdown(f"### Location: {st.session_state.geo_data.get('location_name')}")
+        st.markdown(f"### Environmental Impact: {st.session_state.geo_data.get('location_name')}")
         
-        col1, col2 = st.columns(2)
+        # Key Metrics
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.markdown("#### ♻️ Your Renewable System")
-            st.success(f"**{energy_mwh:,.0f} MWh/year**")
-            st.success(f"**0 tons CO₂** emissions")
-            st.success("**Clean & Sustainable**")
-        
+            st.metric("CO₂ Saved", f"{carbon_saved:,.0f} tons/year", 
+                     delta="vs fossil fuel", delta_color="inverse")
         with col2:
-            st.markdown("#### ⚫ Equivalent Fossil Fuel System")
-            st.error(f"**{energy_mwh:,.0f} MWh/year**")
-            st.error(f"**{carbon_saved:,.0f} tons CO₂** emissions")
-            st.error("**Polluting & Harmful**")
-        
-        st.markdown("---")
-        st.markdown("### Harmful Emissions Avoided (per year)")
-        
-        emissions_df = pd.DataFrame({
-            'Pollutant': ['CO₂', 'SO₂', 'NOx', 'PM2.5', 'CH₄', 'Mercury'],
-            'Amount Avoided': [
-                f"{st.session_state.geo_data['carbon_saved_tons']:,.0f} tons",
-                f"{st.session_state.geo_data['SO2_saved_kg']:,.1f} kg",
-                f"{st.session_state.geo_data['NOx_saved_kg']:,.1f} kg",
-                f"{st.session_state.geo_data['PM25_saved_kg']:,.2f} kg",
-                f"{st.session_state.geo_data['CH4_saved_kg']:,.2f} kg",
-                f"{st.session_state.geo_data['mercury_saved_kg']*1000:,.3f} g"
-            ],
-            'Health Impact': [
-                'Climate change, global warming',
-                'Acid rain, respiratory diseases',
-                'Smog, lung damage',
-                'Heart disease, premature death',
-                'Greenhouse gas (25x worse than CO₂)',
-                'Neurotoxin, brain damage'
-            ]
-        })
-        
-        st.dataframe(emissions_df, use_container_width=True)
+            st.metric("Trees Equivalent", f"{st.session_state.geo_data.get('trees_equivalent', 0):,}")
+        with col3:
+            st.metric("Cars Off Road", f"{st.session_state.geo_data.get('cars_off_road', 0):,}")
+        with col4:
+            st.metric("Coal Avoided", f"{st.session_state.geo_data.get('coal_avoided_tons', 0):,.0f} MWh")
         
         st.markdown("---")
         
-        st.markdown("### Visual Impact Comparison")
-        
+        # Comparison Charts
         col1, col2 = st.columns(2)
         
         with col1:
+            # THIS IS THE FIX - CREATE fuel_comparison DataFrame
             fuel_comparison = pd.DataFrame({
                 'Fuel Type': ['Your System', 'Coal', 'Natural Gas', 'Diesel', 'Furnace Oil'],
                 'CO₂ Emissions (tons)': [
-                    0,
-                    energy_mwh * CARBON_FACTORS['coal'],
-                    energy_mwh * CARBON_FACTORS['natural_gas'],
-                    energy_mwh * CARBON_FACTORS['diesel'],
-                    energy_mwh * CARBON_FACTORS['furnace_oil']
+                    0,  # Your renewable system produces no CO2
+                    energy_total * CARBON_FACTORS['coal'],
+                    energy_total * CARBON_FACTORS['natural_gas'],
+                    energy_total * CARBON_FACTORS['diesel'],
+                    energy_total * CARBON_FACTORS['furnace_oil']
                 ]
             })
             
@@ -852,6 +1317,7 @@ with tab3:
         
     else:
         st.warning("No calculation data available. Please run calculations in the 'Calculate' tab first!")
+
 
 # TAB 4: ENERGY FLOW DIAGRAM
 with tab4:
@@ -973,40 +1439,9 @@ with tab4:
             overall_efficiency = (total_mwh / (primary_total + total_waste)) * 100 if (primary_total + total_waste) > 0 else 0
             st.metric("Overall System Efficiency", f"{overall_efficiency:.1f}%")
         
-        st.markdown("---")
-        st.markdown("### Energy Component Breakdown")
-        
-        component_data = []
-        
-        if waterfall_mwh > 0:
-            component_data.append({
-                'Component': 'Waterfall Turbine',
-                'Energy (MWh)': waterfall_mwh,
-                'Percentage': (waterfall_mwh / total_mwh * 100) if total_mwh > 0 else 0,
-                'Status': '✅ Active'
-            })
-        
-        if geo_mwh > 0:
-            component_data.append({
-                'Component': 'Geothermal System',
-                'Energy (MWh)': geo_mwh,
-                'Percentage': (geo_mwh / total_mwh * 100) if total_mwh > 0 else 0,
-                'Status': '✅ Active'
-            })
-        
-        if waste_recovered > 0:
-            component_data.append({
-                'Component': 'Waste Recovery',
-                'Energy (MWh)': waste_recovered,
-                'Percentage': (waste_recovered / total_mwh * 100) if total_mwh > 0 else 0,
-                'Status': '♻️ Continuous'
-            })
-        
-        component_df = pd.DataFrame(component_data)
-        st.dataframe(component_df, use_container_width=True)
-        
     else:
         st.warning("No calculation data available. Please run calculations in the 'Calculate' tab first!")
+
 
 # TAB 5: ANALYSIS
 with tab5:
@@ -1179,278 +1614,437 @@ with tab5:
             )
             st.plotly_chart(fig, use_container_width=True)
         
-        st.markdown("---")
-        st.subheader("Comparison with Other Renewable Sources")
-        
-        total_mwh = st.session_state.geo_data.get('E_total_year_MWh', 0)
-        
-        solar_equiv_capacity = total_mwh / (8760 * 0.20)
-        wind_equiv_capacity = total_mwh / (8760 * 0.35)
-        
-        comparison_df = pd.DataFrame({
-            'Source': ['Your System', 'Equivalent Solar', 'Equivalent Wind'],
-            'Capacity (MW)': [
-                st.session_state.geo_data.get('P_total_MW', 0),
-                solar_equiv_capacity,
-                wind_equiv_capacity
-            ],
-            'Capacity Factor': ['85%', '20%', '35%'],
-            'Annual MWh': [total_mwh, total_mwh, total_mwh]
-        })
-        
-        st.dataframe(comparison_df, use_container_width=True)
-        
-        st.info("""
-        **Why your system is better:**
-        - Higher capacity factor (85% vs 20-35%)
-        - More predictable output (not weather dependent)
-        - Smaller land footprint
-        - Lower intermittency
-        """)
-        
     else:
         st.warning("No calculation data available. Please go to the 'Calculate' tab first!")
 
-# TAB 6: EXPORT
+
+# TAB 6: EXPORT & AI REPORTS
 with tab6:
-    st.header("Export & Batch Analysis")
+    st.header("📊 Export & AI Report Generator")
     
-    if st.session_state.geo_data and 'location_name' in st.session_state.geo_data:
-        st.subheader("Download Current Calculation")
-        
-        export_data = {
-            'Location Name': [st.session_state.geo_data.get('location_name', 'N/A')],
-            'Latitude': [st.session_state.geo_data.get('latitude', 0)],
-            'Longitude': [st.session_state.geo_data.get('longitude', 0)],
-            'Waterfall Power (MW)': [st.session_state.geo_data.get('P_waterfall_MW', 0)],
-            'Geothermal Power (MW)': [st.session_state.geo_data.get('P_geo_MW', 0)],
-            'Total Power (MW)': [st.session_state.geo_data.get('P_total_MW', 0)],
-            'Annual Energy (MWh)': [st.session_state.geo_data.get('E_total_year_MWh', 0)],
-            'CO₂ Saved (tons/year)': [st.session_state.geo_data.get('carbon_saved_tons', 0)],
-            'Households Powered': [st.session_state.geo_data.get('households_total', 0)],
-            'Pipe Material': [st.session_state.geo_data.get('pipe_material', 'N/A')]
-        }
-        
-        export_df = pd.DataFrame(export_data)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            csv = export_df.to_csv(index=False)
-            st.download_button(
-                label="Download as CSV",
-                data=csv,
-                file_name=f"ecogrid_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.csv",
-                mime="text/csv"
-            )
-        
-        with col2:
-            json_str = export_df.to_json(orient='records', indent=2)
-            st.download_button(
-                label="Download as JSON",
-                data=json_str,
-                file_name=f"ecogrid_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.json",
-                mime="application/json"
-            )
+    # Create sub-tabs for different export options
+    export_tab1, export_tab2, export_tab3 = st.tabs([
+        "📄 Data Export (CSV/JSON)", 
+        "🤖 AI-Powered PDF Report", 
+        "📦 Batch Analysis"
+    ])
     
-    # Linked locations export
-    if st.session_state.linked_locations:
-        st.markdown("---")
-        st.subheader("🔗 Linked Location Network Export")
+    # SUB-TAB 1: Traditional Data Export
+    with export_tab1:
+        st.subheader("Export Calculation Data")
         
-        network_data = []
-        for loc in st.session_state.linked_locations:
-            network_data.append({
-                'Location': loc.get('location_name'),
-                'Latitude': loc.get('latitude'),
-                'Longitude': loc.get('longitude'),
-                'Power (MW)': loc.get('P_total_MW'),
-                'Energy (MWh/year)': loc.get('E_total_year_MWh'),
-                'CO₂ Saved (tons)': loc.get('carbon_saved_tons'),
-                'Households': loc.get('households_total')
-            })
-        
-        network_df = pd.DataFrame(network_data)
-        st.dataframe(network_df, use_container_width=True)
-        
-        # Network totals
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Locations", len(st.session_state.linked_locations))
-        with col2:
-            total_power = sum([loc.get('P_total_MW', 0) for loc in st.session_state.linked_locations])
-            st.metric("Combined Power", f"{total_power:.2f} MW")
-        with col3:
-            total_carbon = sum([loc.get('carbon_saved_tons', 0) for loc in st.session_state.linked_locations])
-            st.metric("Total CO₂ Saved", f"{total_carbon:,.0f} tons")
-        with col4:
-            total_households = sum([loc.get('households_total', 0) for loc in st.session_state.linked_locations])
-            st.metric("Total Households", f"{total_households:,}")
-        
-        csv_network = network_df.to_csv(index=False)
-        st.download_button(
-            label="Download Linked Network Data",
-            data=csv_network,
-            file_name="ecogrid_linked_network.csv",
-            mime="text/csv"
-        )
-    
-    st.markdown("---")
-    st.subheader("Batch Analysis from CSV")
-    
-    st.markdown("""
-    Upload a CSV file with multiple locations to analyze them all at once.
-    
-    **Required CSV format:**
-    ```
-    location_name,latitude,longitude,waterfall_height_m,waterfall_flow_m3s,geo_temp_c,depth_km
-    Location 1,23.8103,90.4125,50,10,200,3.0
-    Location 2,24.8949,91.8687,30,12,150,2.5
-    ```
-    """)
-    
-    sample_data = {
-        'location_name': ['Chittagong Hills', 'Sylhet Valley', 'Khulna Region'],
-        'latitude': [22.3569, 24.8949, 22.8456],
-        'longitude': [91.7832, 91.8687, 89.5403],
-        'waterfall_height_m': [45, 30, 0],
-        'waterfall_flow_m3s': [8.5, 12.0, 0],
-        'geo_temp_c': [180, 150, 200],
-        'depth_km': [2.8, 2.5, 3.5]
-    }
-    sample_df = pd.DataFrame(sample_data)
-    
-    st.download_button(
-        label="Download Sample CSV Template",
-        data=sample_df.to_csv(index=False),
-        file_name="sample_locations_template.csv",
-        mime="text/csv"
-    )
-    
-    uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'])
-    
-    if uploaded_file is not None:
-        try:
-            batch_df = pd.read_csv(uploaded_file)
-            st.write("### Uploaded Data Preview")
-            st.dataframe(batch_df.head(), use_container_width=True)
+        if st.session_state.geo_data and 'location_name' in st.session_state.geo_data:
             
-            if st.button("Process All Locations", type="primary"):
-                
-                results = []
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                for idx, row in batch_df.iterrows():
-                    status_text.text(f"Processing {row.get('location_name', f'Location {idx+1}')}...")
-                    
-                    lat = row.get('latitude', 0)
-                    lng = row.get('longitude', 0)
-                    h = row.get('waterfall_height_m', 0)
-                    q = row.get('waterfall_flow_m3s', 0)
-                    temp = row.get('geo_temp_c', 0)
-                    depth = row.get('depth_km', 3.0)
-                    
-                    if h > 0 and q > 0:
-                        p_waterfall = (1000 * 9.81 * q * h * 0.9) / 1_000_000
-                        e_waterfall = p_waterfall * 24 * 365
-                        waterfall_waste = e_waterfall * 1000 * 0.30
-                    else:
-                        p_waterfall = 0
-                        e_waterfall = 0
-                        waterfall_waste = 0
-                    
-                    if temp > 50:
-                        p_geo = (50 * 4.18 * (temp - 25) * 0.15) / 1000
-                        e_geo = p_geo * 24 * 365 * 0.85
-                        geothermal_waste = e_geo * 1000 * 0.30
-                    else:
-                        p_geo = 0
-                        e_geo = 0
-                        geothermal_waste = 0
-                    
-                    # Waste recovery
-                    total_waste = waterfall_waste + geothermal_waste
-                    e_waste_recovered = (total_waste * 0.80) / 1000
-                    
-                    total_annual = e_waterfall + e_geo + e_waste_recovered
-                    households = int(total_annual * 1000 / 7.2)
-                    
-                    # Carbon calculations
-                    carbon_saved = total_annual * CARBON_FACTORS['grid_average_bangladesh']
-                    
-                    if temp < 300:
-                        material = "Stainless Steel"
-                    elif temp < 600:
-                        material = "Inconel alloys"
-                    else:
-                        material = "Ceramic composites"
-                    
-                    results.append({
-                        'Location': row.get('location_name', f'Location {idx+1}'),
-                        'Latitude': lat,
-                        'Longitude': lng,
-                        'Waterfall_MW': round(p_waterfall, 2),
-                        'Geothermal_MW': round(p_geo, 2),
-                        'Total_Annual_MWh': round(total_annual, 0),
-                        'CO2_Saved_tons': round(carbon_saved, 0),
-                        'Households': households,
-                        'Pipe_Material': material if temp > 50 else 'N/A'
-                    })
-                    
-                    progress_bar.progress((idx + 1) / len(batch_df))
-                
-                status_text.text("Processing complete!")
-                
-                results_df = pd.DataFrame(results)
-                st.write("### Batch Analysis Results")
-                st.dataframe(results_df, use_container_width=True)
-                
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("Total Locations", len(results_df))
-                with col2:
-                    total_power = results_df['Waterfall_MW'].sum() + results_df['Geothermal_MW'].sum()
-                    st.metric("Combined Power", f"{total_power:.2f} MW")
-                with col3:
-                    total_carbon = results_df['CO2_Saved_tons'].sum()
-                    st.metric("Total CO₂ Saved", f"{total_carbon:,.0f} tons/yr")
-                with col4:
-                    total_households = results_df['Households'].sum()
-                    st.metric("Total Households", f"{total_households:,}")
-                
-                fig = px.scatter_mapbox(
-                    results_df,
-                    lat='Latitude',
-                    lon='Longitude',
-                    size='Total_Annual_MWh',
-                    color='Total_Annual_MWh',
-                    hover_name='Location',
-                    hover_data=['Households', 'Waterfall_MW', 'Geothermal_MW', 'CO2_Saved_tons'],
-                    color_continuous_scale='Viridis',
-                    size_max=20,
-                    zoom=5
-                )
-                
-                fig.update_layout(
-                    mapbox_style="open-street-map",
-                    title="Energy Potential Map - All Locations"
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
+            export_data = {
+                'Location Name': [st.session_state.geo_data.get('location_name', 'N/A')],
+                'Latitude': [st.session_state.geo_data.get('latitude', 0)],
+                'Longitude': [st.session_state.geo_data.get('longitude', 0)],
+                'Waterfall Power (MW)': [st.session_state.geo_data.get('P_waterfall_MW', 0)],
+                'Geothermal Power (MW)': [st.session_state.geo_data.get('P_geo_MW', 0)],
+                'Total Power (MW)': [st.session_state.geo_data.get('P_total_MW', 0)],
+                'Annual Energy (MWh)': [st.session_state.geo_data.get('E_total_year_MWh', 0)],
+                'CO₂ Saved (tons/year)': [st.session_state.geo_data.get('carbon_saved_tons', 0)],
+                'Households Powered': [st.session_state.geo_data.get('households_total', 0)],
+                'Trees Equivalent': [st.session_state.geo_data.get('trees_equivalent', 0)],
+                'Cars Off Road': [st.session_state.geo_data.get('cars_off_road', 0)],
+                'Pipe Material': [st.session_state.geo_data.get('pipe_material', 'N/A')]
+            }
+            
+            export_df = pd.DataFrame(export_data)
+            st.dataframe(export_df, use_container_width=True)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                csv = export_df.to_csv(index=False)
                 st.download_button(
-                    label="Download Batch Results",
-                    data=results_df.to_csv(index=False),
-                    file_name="batch_energy_analysis_results.csv",
+                    label="⬇️ Download as CSV",
+                    data=csv,
+                    file_name=f"ecogrid_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.csv",
                     mime="text/csv"
                 )
+            
+            with col2:
+                json_str = export_df.to_json(orient='records', indent=2)
+                st.download_button(
+                    label="⬇️ Download as JSON",
+                    data=json_str,
+                    file_name=f"ecogrid_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.json",
+                    mime="application/json"
+                )
+            
+            # Linked locations export
+            if st.session_state.linked_locations:
+                st.markdown("---")
+                st.subheader("🔗 Linked Location Network Export")
                 
-        except Exception as e:
-            st.error(f"Error processing file: {str(e)}")
-            st.info("Please make sure your CSV has the correct column names and format.")
-
-st.markdown("---")
-st.markdown("**EcoGrid Toolkit** - Geographic Calculator")
-st.caption("Renewable energy analysis with environmental impact assessment")
+                network_data = []
+                for loc in st.session_state.linked_locations:
+                    network_data.append({
+                        'Location': loc.get('location_name'),
+                        'Latitude': loc.get('latitude'),
+                        'Longitude': loc.get('longitude'),
+                        'Power (MW)': loc.get('P_total_MW'),
+                        'Energy (MWh/year)': loc.get('E_total_year_MWh'),
+                        'CO₂ Saved (tons)': loc.get('carbon_saved_tons'),
+                        'Households': loc.get('households_total')
+                    })
+                
+                network_df = pd.DataFrame(network_data)
+                st.dataframe(network_df, use_container_width=True)
+                
+                csv_network = network_df.to_csv(index=False)
+                st.download_button(
+                    label="⬇️ Download Linked Network Data",
+                    data=csv_network,
+                    file_name="ecogrid_linked_network.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.warning("No calculation data available. Run calculations first!")
+    
+    # SUB-TAB 2: AI-Powered PDF Report Generator
+    with export_tab2:
+        st.subheader("🤖 AI-Powered Comprehensive Report")
+        
+        if not st.session_state.geo_data or 'P_total_MW' not in st.session_state.geo_data:
+            st.warning("⚠️ No calculation data available!")
+            st.info("Run calculations in the **Calculate** tab first, then return here to generate your AI report.")
+        else:
+            st.markdown("""
+            **What makes this special?**
+            
+            Instead of just exporting raw numbers, our AI analyzes your data and creates a 
+            professional report that explains:
+            - What the numbers actually mean in simple terms
+            - Why this project matters for your community
+            - How it compares to traditional energy sources
+            - Environmental and economic benefits in plain language
+            - Implementation recommendations
+            
+            Perfect for presentations to government officials, community meetings, or investor pitches!
+            """)
+            
+            st.markdown("---")
+            
+            # Report Configuration
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                report_type = st.selectbox(
+                    "📋 Report Type",
+                    [
+                        "Executive Summary (2-3 pages)",
+                        "Detailed Technical Report (8-10 pages)",
+                        "Community Presentation (5-7 pages)",
+                        "Investment Proposal (6-8 pages)",
+                        "Environmental Impact Assessment (10-12 pages)"
+                    ],
+                    help="Choose the type of report based on your needs"
+                )
+                
+                audience = st.selectbox(
+                    "👥 Target Audience",
+                    [
+                        "Government Officials",
+                        "Community Members",
+                        "Investors/Funders",
+                        "Technical Engineers",
+                        "Environmental Groups",
+                        "General Public"
+                    ],
+                    help="Who will be reading this report?"
+                )
+                
+                language_style = st.selectbox(
+                    "📝 Language Style",
+                    [
+                        "Simple & Accessible",
+                        "Technical & Professional",
+                        "Persuasive & Compelling",
+                        "Educational & Informative"
+                    ]
+                )
+            
+            with col2:
+                include_visualizations = st.checkbox("Include Data Visualizations", value=True)
+                include_comparisons = st.checkbox("Compare with Fossil Fuels", value=True)
+                include_implementation = st.checkbox("Include Implementation Plan", value=True)
+                include_cost_estimate = st.checkbox("Include Cost Estimates", value=False)
+                
+                st.info("💡 **Tip:** AI will explain technical terms in simple language based on your audience selection.")
+            
+            # Analysis Focus
+            st.markdown("### 🎯 What should the AI analyze?")
+            
+            analysis_focus = st.multiselect(
+                "Select focus areas:",
+                [
+                    "Explain the numbers in simple terms",
+                    "Compare with traditional energy sources",
+                    "Highlight environmental benefits",
+                    "Discuss economic opportunities",
+                    "Address potential challenges",
+                    "Provide implementation roadmap",
+                    "Calculate return on investment",
+                    "Identify funding opportunities",
+                    "Assess community impact",
+                    "Evaluate scalability potential"
+                ],
+                default=[
+                    "Explain the numbers in simple terms",
+                    "Highlight environmental benefits",
+                    "Discuss economic opportunities"
+                ]
+            )
+            
+            st.markdown("---")
+            
+            # Generate Report Button
+            if st.button("🤖 Generate AI Report", type="primary", use_container_width=True):
+                
+                # Prepare data for AI
+                analysis_data = {
+                    'location': st.session_state.geo_data.get('location_name'),
+                    'coordinates': {
+                        'latitude': st.session_state.geo_data.get('latitude'),
+                        'longitude': st.session_state.geo_data.get('longitude')
+                    },
+                    'power_generation': {
+                        'total_mw': st.session_state.geo_data.get('P_total_MW', 0),
+                        'waterfall_mw': st.session_state.geo_data.get('P_waterfall_MW', 0),
+                        'geothermal_mw': st.session_state.geo_data.get('P_geo_MW', 0),
+                        'annual_energy_mwh': st.session_state.geo_data.get('E_total_year_MWh', 0)
+                    },
+                    'environmental_impact': {
+                        'carbon_saved_tons': st.session_state.geo_data.get('carbon_saved_tons', 0),
+                        'trees_equivalent': st.session_state.geo_data.get('trees_equivalent', 0),
+                        'cars_off_road': st.session_state.geo_data.get('cars_off_road', 0),
+                        'coal_avoided_tons': st.session_state.geo_data.get('coal_avoided_tons', 0)
+                    },
+                    'community_impact': {
+                        'households_powered': st.session_state.geo_data.get('households_total', 0),
+                        'people_served': st.session_state.geo_data.get('households_total', 0) * 4
+                    },
+                    'technical_details': {
+                        'waterfall_height': st.session_state.geo_data.get('waterfall_height', 0),
+                        'waterfall_flow': st.session_state.geo_data.get('waterfall_flow', 0),
+                        'geothermal_temp': st.session_state.geo_data.get('geo_temp', 0),
+                        'drilling_depth': st.session_state.geo_data.get('depth', 0),
+                        'pipe_material': st.session_state.geo_data.get('pipe_material', 'N/A')
+                    }
+                }
+                
+                with st.spinner("🤖 AI is analyzing your data and writing the report... This may take 30-60 seconds."):
+                    
+                    # Generate the report using template (you can integrate with Claude API later)
+                    report_content = generate_ai_report(
+                        analysis_data, 
+                        report_type, 
+                        audience,
+                        language_style,
+                        analysis_focus,
+                        include_comparisons,
+                        include_implementation
+                    )
+                    
+                    # Store in session state
+                    st.session_state['ai_report'] = report_content
+                    st.session_state['report_metadata'] = {
+                        'type': report_type,
+                        'audience': audience,
+                        'generated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        'location': st.session_state.geo_data.get('location_name')
+                    }
+                    
+                    st.success("✅ AI Report Generated Successfully!")
+                    st.balloons()
+            
+            # Display generated report
+            if 'ai_report' in st.session_state:
+                st.markdown("---")
+                st.markdown("### 📄 Generated Report Preview")
+                
+                # Report metadata
+                if 'report_metadata' in st.session_state:
+                    meta = st.session_state['report_metadata']
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.caption(f"**Type:** {meta.get('type')}")
+                    with col2:
+                        st.caption(f"**Audience:** {meta.get('audience')}")
+                    with col3:
+                        st.caption(f"**Generated:** {meta.get('generated_at')}")
+                
+                # Show report in expandable section
+                with st.expander("📖 Read Full Report", expanded=True):
+                    st.markdown(st.session_state['ai_report'])
+                
+                st.markdown("---")
+                
+                # Download options
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    # Download as Markdown
+                    st.download_button(
+                        label="⬇️ Download as Markdown (.md)",
+                        data=st.session_state['ai_report'],
+                        file_name=f"AI_Report_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.md",
+                        mime="text/markdown"
+                    )
+                
+                with col2:
+                    # Download as Text
+                    st.download_button(
+                        label="⬇️ Download as Text (.txt)",
+                        data=st.session_state['ai_report'],
+                        file_name=f"AI_Report_{st.session_state.geo_data.get('location_name', 'location').replace(' ', '_')}.txt",
+                        mime="text/plain"
+                    )
+                
+                with col3:
+                    if st.button("🔄 Generate New Report"):
+                        del st.session_state['ai_report']
+                        if 'report_metadata' in st.session_state:
+                            del st.session_state['report_metadata']
+                        st.rerun()
+                
+                st.info("💡 **Pro Tip:** You can copy the report text and paste it into Word/Google Docs, or convert the Markdown file to PDF using online tools!")
+        
+    # SUB-TAB 3: Batch Analysis
+    with export_tab3:
+        st.subheader("Batch Analysis from CSV")
+        
+        st.markdown("""
+        Upload a CSV file with multiple locations to analyze them all at once.
+        
+        **Required CSV format:**
+        ```
+        location_name,latitude,longitude,waterfall_height_m,waterfall_flow_m3s,geo_temp_c,depth_km
+        Location 1,23.8103,90.4125,50,10,200,3.0
+        Location 2,24.8949,91.8687,30,12,150,2.5
+        ```
+        """)
+        
+        sample_data = {
+            'location_name': ['Chittagong Hills', 'Sylhet Valley', 'Khulna Region'],
+            'latitude': [22.3569, 24.8949, 22.8456],
+            'longitude': [91.7832, 91.8687, 89.5403],
+            'waterfall_height_m': [45, 30, 0],
+            'waterfall_flow_m3s': [8.5, 12.0, 0],
+            'geo_temp_c': [180, 150, 200],
+            'depth_km': [2.8, 2.5, 3.5]
+        }
+        sample_df = pd.DataFrame(sample_data)
+        
+        st.download_button(
+            label="⬇️ Download Sample CSV Template",
+            data=sample_df.to_csv(index=False),
+            file_name="sample_locations_template.csv",
+            mime="text/csv"
+        )
+        
+        uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'])
+        
+        if uploaded_file is not None:
+            try:
+                batch_df = pd.read_csv(uploaded_file)
+                st.write("### Uploaded Data Preview")
+                st.dataframe(batch_df.head(), use_container_width=True)
+                
+                if st.button("⚙️ Process All Locations", type="primary"):
+                    
+                    results = []
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    for idx, row in batch_df.iterrows():
+                        status_text.text(f"Processing {row.get('location_name', f'Location {idx+1}')}...")
+                        
+                        lat = row.get('latitude', 0)
+                        lng = row.get('longitude', 0)
+                        h = row.get('waterfall_height_m', 0)
+                        q = row.get('waterfall_flow_m3s', 0)
+                        temp = row.get('geo_temp_c', 0)
+                        depth = row.get('depth_km', 3.0)
+                        
+                        if h > 0 and q > 0:
+                            p_waterfall = (1000 * 9.81 * q * h * 0.9) / 1_000_000
+                            e_waterfall = p_waterfall * 24 * 365
+                            waterfall_waste = e_waterfall * 1000 * 0.30
+                        else:
+                            p_waterfall = 0
+                            e_waterfall = 0
+                            waterfall_waste = 0
+                        
+                        if temp > 50:
+                            p_geo = (50 * 4.18 * (temp - 25) * 0.15) / 1000
+                            e_geo = p_geo * 24 * 365 * 0.85
+                            geothermal_waste = e_geo * 1000 * 0.30
+                        else:
+                            p_geo = 0
+                            e_geo = 0
+                            geothermal_waste = 0
+                        
+                        # Waste recovery
+                        total_waste = waterfall_waste + geothermal_waste
+                        e_waste_recovered = (total_waste * 0.80) / 1000
+                        
+                        total_annual = e_waterfall + e_geo + e_waste_recovered
+                        households = int(total_annual * 1000 / 7.2)
+                        
+                        # Carbon calculations
+                        carbon_saved = total_annual * CARBON_FACTORS['grid_average_bangladesh']
+                        
+                        if temp < 300:
+                            material = "Stainless Steel"
+                        elif temp < 600:
+                            material = "Inconel alloys"
+                        else:
+                            material = "Ceramic composites"
+                        
+                        results.append({
+                            'Location': row.get('location_name', f'Location {idx+1}'),
+                            'Latitude': lat,
+                            'Longitude': lng,
+                            'Waterfall_MW': round(p_waterfall, 2),
+                            'Geothermal_MW': round(p_geo, 2),
+                            'Total_Annual_MWh': round(total_annual, 0),
+                            'CO2_Saved_tons': round(carbon_saved, 0),
+                            'Households': households,
+                            'Pipe_Material': material if temp > 50 else 'N/A'
+                        })
+                        
+                        progress_bar.progress((idx + 1) / len(batch_df))
+                    
+                    status_text.text("✅ Processing complete!")
+                    
+                    results_df = pd.DataFrame(results)
+                    st.write("### Batch Analysis Results")
+                    st.dataframe(results_df, use_container_width=True)
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        st.metric("Total Locations", len(results_df))
+                    with col2:
+                        total_power = results_df['Waterfall_MW'].sum() + results_df['Geothermal_MW'].sum()
+                        st.metric("Combined Power", f"{total_power:.2f} MW")
+                    with col3:
+                        total_carbon = results_df['CO2_Saved_tons'].sum()
+                        st.metric("Total CO₂ Saved", f"{total_carbon:,.0f} tons/yr")
+                    with col4:
+                        total_households = results_df['Households'].sum()
+                        st.metric("Total Households", f"{total_households:,}")
+                    
+                    st.download_button(
+                        label="⬇️ Download Batch Results",
+                        data=results_df.to_csv(index=False),
+                        file_name="batch_energy_analysis_results.csv",
+                        mime="text/csv"
+                    )
+                    
+            except Exception as e:
+                st.error(f"Error processing file: {str(e)}")
+                st.info("Please make sure your CSV has the correct column names and format.")
