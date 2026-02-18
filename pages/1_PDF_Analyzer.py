@@ -7,7 +7,6 @@ try:
 except ImportError:
     st.error("PyPDF2 not installed. Run: pip install PyPDF2")
 
-st.set_page_config(page_title="PDF Analyzer", layout="wide")
 
 if 'pdf_extracted' not in st.session_state:
     st.session_state.pdf_extracted = {}
@@ -310,7 +309,7 @@ if uploaded_file is not None:
                 critical_errors = [e for e in validation_errors if e.startswith("ERROR")]
                 if critical_errors:
                     st.error("Please correct the errors above before sending data to the calculator.")
-                    st.stop()
+                    raise SystemExit
             
             # If validation passes, send data
             st.session_state.pdf_extracted = extracted_data
