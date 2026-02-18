@@ -45,7 +45,7 @@ html, body, [class*="css"] {
 .hero-wrap {
     background: linear-gradient(135deg, #0a2e22 0%, #071f17 50%, #040f0b 100%);
     border: 1px solid var(--bd); border-radius: 24px;
-    padding: 48px 56px; margin-bottom: 36px;
+    padding: 52px 56px 52px 52px; margin-bottom: 36px; min-height: 200px;
     position: relative; overflow: hidden;
     display: flex; align-items: center; gap: 40px;
 }
@@ -61,8 +61,8 @@ html, body, [class*="css"] {
 }
 .hero-text { position: relative; z-index: 1; }
 .hero-logo {
-    font-family: var(--font-head); font-size: 5em; font-weight: 800;
-    color: var(--gb); letter-spacing: -3px; line-height: 1; margin: 0;
+    font-family: var(--font-head) !important; font-size: clamp(3rem, 5vw, 5.5rem) !important; font-weight: 800 !important;
+    color: var(--gb) !important; letter-spacing: -3px !important; line-height: 1 !important; margin: 0 !important;
 }
 .hero-logo span { color: var(--ea); }
 .hero-tag {
