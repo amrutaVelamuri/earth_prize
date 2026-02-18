@@ -1606,10 +1606,10 @@ with col_method:
             critical_errors = [e for e in validation_errors if e.startswith("ERROR")]
             if critical_errors:
                 st.error("**Cannot proceed with calculation. Please fix the errors above.**")
-                st.stop()
+                raise SystemExit
             else:
                 if not st.checkbox("I acknowledge the warnings above and want to proceed with calculation"):
-                    st.stop()
+                    raise SystemExit
         
         with st.spinner("Calculating energy potential and environmental impact..."):
             
