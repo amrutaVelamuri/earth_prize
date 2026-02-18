@@ -12,7 +12,7 @@ from datetime import datetime
 # PAGE CONFIG — sidebar hidden entirely
 # ============================================================================
 st.set_page_config(
-    page_title="EcoGrid — Community Energy Toolkit",
+    page_title="EcoGrid Toolkit",
     layout="wide",
     page_icon="🌱",
     initial_sidebar_state="collapsed"
@@ -23,104 +23,155 @@ st.set_page_config(
 # ============================================================================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 [data-testid="collapsedControl"]  { display: none !important; }
 section[data-testid="stSidebar"]  { display: none !important; }
 
 :root {
     --gd:#0d3b2e; --gm:#1a6b4a; --gb:#2ecc85; --gg:#4fffb0;
-    --ea:#c8a96e; --cr:#f5f0e8; --dk:#0a1f17; --bd:rgba(46,204,133,.2);
+    --ea:#c8a96e; --cr:#f0ede8; --dk:#080f0c; --bd:rgba(46,204,133,.18);
+    --font-head: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Inter', sans-serif;
 }
-html,body,[class*="css"]{ font-family:'DM Sans',sans-serif; }
+html, body, [class*="css"] {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+}
 .main { background: var(--dk); }
 .block-container { padding: 1.5rem 2.5rem 4rem; }
 
-.hero-wrap{background:linear-gradient(135deg,#0d3b2e 0%,#0a2a20 45%,#071a14 100%);
-    border:1px solid var(--bd);border-radius:20px;padding:40px 50px;margin-bottom:32px;
-    position:relative;overflow:hidden;
-    display:flex;align-items:center;gap:36px;}
-.hero-wrap::before{content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(46,204,133,.13) 0%,transparent 70%);
-    pointer-events:none;}
-.hero-logo-img{
-    width:140px;height:140px;object-fit:contain;flex-shrink:0;
-    filter:drop-shadow(0 0 18px rgba(46,204,133,0.35)) brightness(1.1);
-    position:relative;z-index:1;
-    border-radius:50%;
-    mix-blend-mode: lighten;
+.hero-wrap {
+    background: linear-gradient(135deg, #0a2e22 0%, #071f17 50%, #040f0b 100%);
+    border: 1px solid var(--bd); border-radius: 24px;
+    padding: 44px 52px; margin-bottom: 36px;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 40px;
 }
-.hero-text{position:relative;z-index:1;}
-.hero-logo{font-family:'Syne',sans-serif;font-size:4em;font-weight:800;
-    color:var(--gb);letter-spacing:-2px;line-height:1;margin:0;}
-.hero-logo span{color:var(--ea);}
-.hero-tag{font-size:1.05em;color:rgba(245,240,232,.65);margin:8px 0 0;font-weight:300;}
-.hero-badge{display:inline-block;background:rgba(46,204,133,.12);border:1px solid var(--gb);
-    color:var(--gb);border-radius:100px;padding:4px 14px;
-    font-size:.74em;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
-
-.stTabs [data-baseweb="tab-list"]{background:rgba(13,59,46,.6);border-radius:14px;padding:5px;
-    gap:3px;border:1px solid var(--bd);backdrop-filter:blur(10px);}
-.stTabs [data-baseweb="tab"]{border-radius:10px;padding:10px 20px;
-    color:rgba(245,240,232,.48);font-family:'Syne',sans-serif;
-    font-weight:600;font-size:.84em;transition:all .25s;
-    border:none!important;background:transparent!important;}
-.stTabs [aria-selected="true"]{background:var(--gb)!important;color:var(--dk)!important;}
-.stTabs [data-baseweb="tab-panel"]{padding-top:26px;min-height:500px;}
-
-.sh{font-family:'Syne',sans-serif;font-size:1.85em;font-weight:800;
-    color:var(--cr);letter-spacing:-1px;margin-bottom:3px;}
-.ss{color:rgba(245,240,232,.43);font-size:.88em;margin-bottom:20px;}
-.al{width:42px;height:3px;background:var(--gb);border-radius:2px;margin-bottom:16px;}
-
-.stat-card{background:linear-gradient(145deg,rgba(26,107,74,.2),rgba(13,59,46,.35));
-    border:1px solid var(--bd);border-radius:16px;padding:20px 14px;text-align:center;}
-.sn{font-family:'Syne',sans-serif;font-size:2.1em;font-weight:800;color:var(--gb);line-height:1;}
-.sl{font-size:.76em;color:rgba(245,240,232,.48);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;}
-
-.team-card{background:linear-gradient(145deg,rgba(26,107,74,.13),rgba(13,59,46,.26));
-    border:1px solid var(--bd);border-radius:18px;padding:24px 16px;text-align:center;
-    transition:transform .3s,border-color .3s;}
-.team-card:hover{border-color:var(--gb);transform:translateY(-4px);}
-.tav{width:88px;height:88px;border-radius:50%;margin:0 auto 13px;
-    border:2px solid var(--gb);display:flex;align-items:center;justify-content:center;
-    font-size:1.9em;font-weight:700;font-family:'Syne',sans-serif;}
-.tn{font-family:'Syne',sans-serif;font-size:.97em;font-weight:700;color:var(--cr);margin-bottom:2px;}
-.tr{font-size:.76em;color:var(--gb);text-transform:uppercase;letter-spacing:.8px;font-weight:600;}
-.tb{font-size:.78em;color:rgba(245,240,232,.48);margin-top:6px;line-height:1.5;}
-
-.hw-card{background:linear-gradient(145deg,rgba(26,107,74,.17),rgba(13,59,46,.28));
-    border:1px solid var(--bd);border-radius:15px;padding:20px;text-align:center;}
-.hi{font-size:2.1em;margin-bottom:6px;}
-.hl{font-family:'Syne',sans-serif;font-size:.86em;font-weight:700;color:var(--cr);text-transform:uppercase;letter-spacing:.4px;}
-.hon{color:var(--gb);font-size:.92em;font-weight:700;margin-top:5px;}
-.hwn{color:var(--ea);font-size:.92em;font-weight:700;margin-top:5px;}
-
-.ib{background:rgba(13,59,46,.4);border-left:3px solid var(--gb);
-    border-radius:0 11px 11px 0;padding:13px 17px;margin:9px 0;
-    color:rgba(245,240,232,.78);font-size:.88em;line-height:1.6;}
-.fp{background:rgba(46,204,133,.09);border:1px solid rgba(46,204,133,.22);
-    color:var(--gb);border-radius:100px;padding:4px 12px;
-    font-size:.8em;font-weight:500;display:inline-block;margin:2px 2px;}
-
-.sr{display:flex;align-items:flex-start;gap:13px;background:rgba(13,59,46,.28);
-    border:1px solid var(--bd);border-radius:12px;padding:15px 17px;margin-bottom:9px;}
-.snum{background:var(--gb);color:var(--dk);width:28px;height:28px;min-width:28px;
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-family:'Syne',sans-serif;font-weight:800;font-size:.88em;}
-.sbody h4{font-family:'Syne',sans-serif;color:var(--cr);margin:0 0 2px;font-size:.9em;}
-.sbody p{color:rgba(245,240,232,.46);margin:0;font-size:.79em;line-height:1.5;}
-
-div[data-testid="stMetricValue"]{color:var(--gb)!important;font-family:'Syne',sans-serif!important;}
-div[data-testid="stMetricLabel"]{color:rgba(245,240,232,.52)!important;}
-.stButton>button{background:var(--gb)!important;color:var(--dk)!important;
-    font-family:'Syne',sans-serif!important;font-weight:700!important;
-    border:none!important;border-radius:10px!important;padding:10px 22px!important;transition:all .2s!important;}
-.stButton>button:hover{background:var(--gg)!important;transform:translateY(-2px);}
-.stSelectbox label,.stNumberInput label,.stCheckbox label,.stSlider label{color:rgba(245,240,232,.75)!important;}
-
-.footer{text-align:center;padding:26px 0 4px;color:rgba(245,240,232,.26);
-    font-size:.78em;border-top:1px solid var(--bd);margin-top:38px;}
+.hero-wrap::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 55% 75% at 85% 50%, rgba(46,204,133,.10) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-logo-img {
+    width: 130px; height: 130px; object-fit: contain; flex-shrink: 0;
+    filter: drop-shadow(0 0 20px rgba(46,204,133,0.3)) brightness(1.05);
+    position: relative; z-index: 1; border-radius: 16px;
+}
+.hero-text { position: relative; z-index: 1; }
+.hero-logo {
+    font-family: var(--font-head); font-size: 3.6em; font-weight: 800;
+    color: var(--gb); letter-spacing: -2.5px; line-height: 1; margin: 0;
+}
+.hero-logo span { color: var(--ea); }
+.hero-tag {
+    font-family: var(--font-body); font-size: 1em; font-weight: 400;
+    color: rgba(240,237,232,.55); margin: 10px 0 0; line-height: 1.5;
+}
+.hero-badge {
+    display: inline-block;
+    background: rgba(46,204,133,.10); border: 1px solid rgba(46,204,133,.35);
+    color: var(--gb); border-radius: 6px; padding: 4px 12px;
+    font-family: var(--font-body); font-size: .72em; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; margin-bottom: 16px;
+}
+.stTabs [data-baseweb="tab-list"] {
+    background: rgba(10,35,25,.7); border-radius: 12px; padding: 4px;
+    gap: 2px; border: 1px solid var(--bd); backdrop-filter: blur(12px);
+}
+.stTabs [data-baseweb="tab"] {
+    border-radius: 9px; padding: 9px 18px; color: rgba(240,237,232,.40);
+    font-family: var(--font-body); font-weight: 500; font-size: .83em;
+    letter-spacing: .01em; transition: all .2s;
+    border: none !important; background: transparent !important;
+}
+.stTabs [aria-selected="true"] {
+    background: var(--gb) !important; color: #061a11 !important; font-weight: 600 !important;
+}
+.stTabs [data-baseweb="tab-panel"] { padding-top: 28px; min-height: 500px; }
+.sh {
+    font-family: var(--font-head); font-size: 1.75em; font-weight: 700;
+    color: var(--cr); letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1.2;
+}
+.ss {
+    font-family: var(--font-body); color: rgba(240,237,232,.38);
+    font-size: .85em; margin-bottom: 22px; font-weight: 400;
+}
+.al { width: 36px; height: 2px; background: var(--gb); border-radius: 2px; margin-bottom: 18px; }
+.stat-card {
+    background: linear-gradient(145deg, rgba(26,107,74,.18), rgba(10,35,25,.4));
+    border: 1px solid var(--bd); border-radius: 16px; padding: 22px 14px; text-align: center;
+}
+.sn { font-family: var(--font-head); font-size: 2em; font-weight: 700; color: var(--gb); line-height: 1; }
+.sl {
+    font-family: var(--font-body); font-size: .72em; font-weight: 500;
+    color: rgba(240,237,232,.40); margin-top: 6px; text-transform: uppercase; letter-spacing: .08em;
+}
+.team-card {
+    background: linear-gradient(160deg, rgba(16,52,36,.5), rgba(8,20,14,.6));
+    border: 1px solid rgba(46,204,133,.14); border-radius: 20px; padding: 28px 18px; text-align: center;
+    transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.team-card:hover {
+    border-color: rgba(46,204,133,.4); transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,.3);
+}
+.tav {
+    width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 14px;
+    border: 1.5px solid rgba(46,204,133,.5);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-size: 1.3em; font-weight: 700; color: var(--gb);
+}
+.tn { font-family: var(--font-head); font-size: .95em; font-weight: 600; color: var(--cr); margin-bottom: 4px; }
+.tr { font-family: var(--font-body); font-size: .7em; font-weight: 500; color: var(--gb); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
+.tb { font-family: var(--font-body); font-size: .78em; color: rgba(240,237,232,.42); line-height: 1.6; }
+.hw-card {
+    background: linear-gradient(145deg, rgba(16,52,36,.4), rgba(8,20,14,.5));
+    border: 1px solid var(--bd); border-radius: 14px; padding: 20px; text-align: center;
+}
+.hi { font-size: 1.9em; margin-bottom: 8px; }
+.hl { font-family: var(--font-body); font-size: .78em; font-weight: 600; color: rgba(240,237,232,.7); text-transform: uppercase; letter-spacing: .08em; }
+.hon { color: var(--gb); font-size: .88em; font-weight: 600; margin-top: 6px; }
+.hwn { color: var(--ea); font-size: .88em; font-weight: 600; margin-top: 6px; }
+.ib {
+    background: rgba(10,35,25,.5); border-left: 2px solid var(--gb);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 8px 0;
+    color: rgba(240,237,232,.72); font-family: var(--font-body); font-size: .875em; line-height: 1.7;
+}
+.fp {
+    background: rgba(46,204,133,.08); border: 1px solid rgba(46,204,133,.2);
+    color: rgba(46,204,133,.9); border-radius: 6px; padding: 4px 11px;
+    font-family: var(--font-body); font-size: .76em; font-weight: 500; display: inline-block; margin: 3px 3px;
+}
+.sr {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(10,35,25,.4); border: 1px solid rgba(46,204,133,.12);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 10px;
+}
+.snum {
+    background: var(--gb); color: #061a11; width: 26px; height: 26px; min-width: 26px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-weight: 700; font-size: .82em;
+}
+.sbody h4 { font-family: var(--font-head); color: var(--cr); margin: 0 0 3px; font-size: .88em; font-weight: 600; }
+.sbody p { font-family: var(--font-body); color: rgba(240,237,232,.42); margin: 0; font-size: .78em; line-height: 1.6; }
+div[data-testid="stMetricValue"] { color: var(--gb) !important; font-family: var(--font-head) !important; font-weight: 700 !important; }
+div[data-testid="stMetricLabel"] { color: rgba(240,237,232,.45) !important; font-family: var(--font-body) !important; }
+.stButton > button {
+    background: var(--gb) !important; color: #061a11 !important;
+    font-family: var(--font-body) !important; font-weight: 600 !important; font-size: .88em !important;
+    border: none !important; border-radius: 9px !important; padding: 10px 22px !important; transition: all .18s !important;
+}
+.stButton > button:hover { background: var(--gg) !important; transform: translateY(-2px); }
+.stSelectbox label, .stNumberInput label, .stCheckbox label, .stSlider label {
+    color: rgba(240,237,232,.65) !important; font-family: var(--font-body) !important; font-size: .85em !important;
+}
+.footer {
+    text-align: center; padding: 28px 0 4px; color: rgba(240,237,232,.22);
+    font-family: var(--font-body); font-size: .76em;
+    border-top: 1px solid rgba(46,204,133,.1); margin-top: 42px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -194,18 +245,18 @@ if logo_b64:
     <div class="hero-wrap">
       <img src="data:image/png;base64,{logo_b64}" class="hero-logo-img" alt="EcoGrid Logo" />
       <div class="hero-text">
-        <div class="hero-badge">🌍 Community Energy Toolkit</div>
+        <div class="hero-badge">🌍 EcoGrid Toolkit</div>
         <p class="hero-logo">Eco<span>Grid</span></p>
-        <p class="hero-tag">Renewable energy analysis · Carbon impact measurement · AI-powered monitoring</p>
+        <p class="hero-tag">Renewable energy analysis · Carbon impact · Wasted energy recovery · AI-powered monitoring</p>
       </div>
     </div>""", unsafe_allow_html=True)
 else:
     st.markdown("""
     <div class="hero-wrap">
       <div class="hero-text">
-        <div class="hero-badge">🌍 Community Energy Toolkit</div>
+        <div class="hero-badge">🌍 EcoGrid Toolkit</div>
         <p class="hero-logo">Eco<span>Grid</span></p>
-        <p class="hero-tag">Renewable energy analysis · Carbon impact measurement · AI-powered monitoring</p>
+        <p class="hero-tag">Renewable energy analysis · Carbon impact · Wasted energy recovery · AI-powered monitoring</p>
       </div>
     </div>""", unsafe_allow_html=True)
     st.info("💡 Tip: Place `logo.png` in the same folder as `app.py` to display the logo.", icon="🖼️")
@@ -234,18 +285,25 @@ with t1:
         col.markdown(f'<div class="stat-card"><div class="sn">{n}</div><div class="sl">{l}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<p class="sh">Meet the Team</p><div class="al"></div><p class="ss">Replace names, roles and bios below — uncomment st.image() to add real photos.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sh">Meet the Team</p><div class="al"></div><p class="ss">Five co-founders united by a mission to make clean energy accessible to every community.</p>', unsafe_allow_html=True)
 
     TEAM = [
-        {"i":"TM1","g":"linear-gradient(135deg,#2ecc85,#0d3b2e)","n":"Team Member 1","r":"Project Lead","b":"Add a short bio here."},
-        {"i":"TM2","g":"linear-gradient(135deg,#4fffb0,#1a6b4a)","n":"Team Member 2","r":"Energy Engineer","b":"Add a short bio here."},
-        {"i":"TM3","g":"linear-gradient(135deg,#c8a96e,#6b4a1a)","n":"Team Member 3","r":"Data Scientist","b":"Add a short bio here."},
-        {"i":"TM4","g":"linear-gradient(135deg,#85c8ff,#1a4a6b)","n":"Team Member 4","r":"Hardware Engineer","b":"Add a short bio here."},
+        {"i":"01","g":"linear-gradient(135deg,rgba(46,204,133,.2),rgba(8,20,14,.8))","n":"Retina","r":"Co-Founder","b":"Add a short bio here."},
+        {"i":"02","g":"linear-gradient(135deg,rgba(46,204,133,.2),rgba(8,20,14,.8))","n":"Siyeong","r":"Co-Founder","b":"Add a short bio here."},
+        {"i":"03","g":"linear-gradient(135deg,rgba(200,169,110,.2),rgba(8,20,14,.8))","n":"Amruta","r":"Co-Founder","b":"Add a short bio here."},
+        {"i":"04","g":"linear-gradient(135deg,rgba(46,204,133,.2),rgba(8,20,14,.8))","n":"Shyam","r":"Co-Founder","b":"Add a short bio here."},
+        {"i":"05","g":"linear-gradient(135deg,rgba(133,196,255,.2),rgba(8,20,14,.8))","n":"Advika","r":"Co-Founder","b":"Add a short bio here."},
     ]
-    for col, m in zip(st.columns(4), TEAM):
+    # 5 co-founders: use 3+2 layout for even spacing
+    row1 = st.columns(3)
+    row2_spacer1, row2_a, row2_b, row2_spacer2 = st.columns([0.5, 1, 1, 0.5])
+    cols = list(row1) + [row2_a, row2_b]
+    for col, m in zip(cols, TEAM):
         with col:
             st.markdown(f"""<div class="team-card">
-              <div class="tav" style="background:{m['g']};">{m['i']}</div>
+              <div class="tav" style="background:{m['g']};">
+                <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:.85em;font-weight:700;color:#2ecc85;">{m['i']}</span>
+              </div>
               <div class="tn">{m['n']}</div>
               <div class="tr">{m['r']}</div>
               <div class="tb">{m['b']}</div>
@@ -256,18 +314,18 @@ with t1:
     f1, f2 = st.columns(2)
     with f1:
         st.markdown("""<div style="background:rgba(13,59,46,.33);border:1px solid rgba(46,204,133,.18);border-radius:15px;padding:20px;">
-          <p style="font-family:'Syne',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:10px;">🔋 Energy Analysis</p>
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:10px;">🔋 Energy Analysis</p>
           <span class="fp">Waterfall Hydro</span><span class="fp">Geothermal</span>
           <span class="fp">Waste Recovery</span><span class="fp">Multi-location Grid</span>
-          <p style="font-family:'Syne',sans-serif;font-weight:700;color:#f5f0e8;margin:14px 0 10px;">🌱 Environmental</p>
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#f5f0e8;margin:14px 0 10px;">🌱 Environmental</p>
           <span class="fp">CO₂ Tracking</span><span class="fp">Tree Equivalency</span><span class="fp">Fossil Comparison</span>
         </div>""", unsafe_allow_html=True)
     with f2:
         st.markdown("""<div style="background:rgba(13,59,46,.33);border:1px solid rgba(46,204,133,.18);border-radius:15px;padding:20px;">
-          <p style="font-family:'Syne',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:10px;">🤖 AI & Forecasting</p>
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:10px;">🤖 AI & Forecasting</p>
           <span class="fp">Real-time Monitoring</span><span class="fp">Anomaly Detection</span>
           <span class="fp">LSTM Predictions</span><span class="fp">122-year Dataset</span>
-          <p style="font-family:'Syne',sans-serif;font-weight:700;color:#f5f0e8;margin:14px 0 10px;">📄 Reporting</p>
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#f5f0e8;margin:14px 0 10px;">📄 Reporting</p>
           <span class="fp">PDF Extraction</span><span class="fp">AI Reports</span><span class="fp">CSV / JSON Export</span>
         </div>""", unsafe_allow_html=True)
 
@@ -342,7 +400,7 @@ with t4:
     st.markdown("<br>", unsafe_allow_html=True)
     hh1, hh2 = st.columns(2)
     with hh1:
-        st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">🔧 Physical Equipment</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">🔧 Physical Equipment</p>', unsafe_allow_html=True)
         for n, d in [
             ("Energy meters & CTs",    "Real-time kWh per phase"),
             ("DAQ modules",            "Digitise analogue signals at 1 kHz"),
@@ -351,7 +409,7 @@ with t4:
         ]:
             st.markdown(f'<div style="background:rgba(13,59,46,.28);border:1px solid rgba(46,204,133,.14);border-radius:10px;padding:11px 15px;margin-bottom:8px;"><p style="color:#f5f0e8;font-weight:600;margin:0 0 2px;font-size:.88em;">{n}</p><p style="color:rgba(245,240,232,.42);margin:0;font-size:.78em;">{d}</p></div>', unsafe_allow_html=True)
     with hh2:
-        st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">📡 Data & Verification</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">📡 Data & Verification</p>', unsafe_allow_html=True)
         for n, d in [
             ("Calibration",   "Monthly zero-point & span vs. reference"),
             ("Protocol",      "MQTT over TLS every 5 s"),
@@ -447,7 +505,7 @@ with t5:
 
     # ── Form ─────────────────────────────────────────────────────────────────
     with st.form("hh_energy_form"):
-        st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;font-size:.94em;margin-bottom:13px;">📊 Enter Energy Reading</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;font-size:.94em;margin-bottom:13px;">📊 Enter Energy Reading</p>', unsafe_allow_html=True)
         fi1, fi2 = st.columns(2)
         with fi1:
             usage_v    = st.number_input("Energy usage (kWh)",   min_value=0.0,  step=0.1, value=5.0)
@@ -489,12 +547,12 @@ with t5:
 
         reasons, actions, conf = eg_ai(rec_obj, rt, an, al, rv)
 
-        st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#2ecc85;margin:18px 0 7px;">🤖 AI Diagnosis</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#2ecc85;margin:18px 0 7px;">🤖 AI Diagnosis</p>', unsafe_allow_html=True)
         for rr in reasons:
             st.markdown(f'<div class="ib">• {rr}</div>', unsafe_allow_html=True)
         st.markdown(f'<p style="color:rgba(245,240,232,.44);font-size:.83em;">Confidence: <strong style="color:#2ecc85;">{conf}%</strong></p>', unsafe_allow_html=True)
 
-        st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#2ecc85;margin:16px 0 7px;">🛠️ Recommended Actions</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#2ecc85;margin:16px 0 7px;">🛠️ Recommended Actions</p>', unsafe_allow_html=True)
         for lvl, act in actions:
             if lvl == "IMMEDIATE":
                 st.error(f"🚨 **[{lvl}]** {act}")
@@ -506,7 +564,7 @@ with t5:
                 st.success(f"✅ **[{lvl}]** {act}")
 
         if len(h['usage_log']) >= 2:
-            st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;margin:20px 0 9px;">📈 Waste Recovery Performance</p>', unsafe_allow_html=True)
+            st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;margin:20px 0 9px;">📈 Waste Recovery Performance</p>', unsafe_allow_html=True)
             fig, ax = plt.subplots(figsize=(10, 4))
             fig.patch.set_facecolor('#0a1f17')
             ax.set_facecolor('#0d3b2e')
@@ -543,4 +601,4 @@ with t5:
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<div class="footer"><strong style="color:#2ecc85;">EcoGrid</strong> · Community Energy & Carbon Impact Toolkit<br>Empowering communities with clean energy solutions · © 2024 EcoGrid Team · Built with Streamlit</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer"><strong style="color:#2ecc85;">EcoGrid Toolkit</strong><br>Empowering communities with clean energy solutions · © 2024 EcoGrid Toolkit · Built with Streamlit</div>', unsafe_allow_html=True)
