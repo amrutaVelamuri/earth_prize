@@ -126,9 +126,11 @@ div[data-testid="stMetricLabel"]{color:rgba(245,240,232,.52)!important;}
 
 # ============================================================================
 # HELPER — run a page file inside the current tab context
+# KEY FIX: We now catch ALL exceptions including StopException from Streamlit
+# and never let them bubble up to corrupt subsequent tabs.
 # ============================================================================
 def run_page(filepath: str):
-    """Run a page file in-place. Catches st.stop() so tabs 4+5 still render."""
+    """Run a page file in-place. Fully isolated so failures never blank out later tabs."""
     abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filepath)
     if not os.path.exists(abs_path):
         st.error(f"File not found: {filepath}")
@@ -142,17 +144,33 @@ def run_page(filepath: str):
     except SystemExit:
         pass
     except Exception as e:
-        st.error(f"Error in {filepath}: {e}")
+        # Catch Streamlit's internal StopException too (it inherits from Exception)
+        err_name = type(e).__name__
+        # StopException is Streamlit's internal stop signal — swallow it silently
+        if "StopException" in err_name or "RerunException" in err_name:
+            pass
+        else:
+            st.error(f"Error loading {os.path.basename(filepath)}: {e}")
 
 
 # ============================================================================
-# SESSION STATE
+# SESSION STATE — initialise ALL keys up front before any tab renders
+# This is critical: if session state is initialised inside a tab,
+# Streamlit Cloud may not have it ready when other tabs render.
 # ============================================================================
-for k, v in {
-    'geo_data': {}, 'pdf_extracted': {}, 'predictions': {},
+_defaults = {
+    'geo_data': {},
+    'pdf_extracted': {},
+    'predictions': {},
     'linked_locations': [],
-    'energy_history_v4': {'records':[],'usage_log':[],'recovered_log':[],'remaining_log':[]},
-}.items():
+    'energy_history_v4': {
+        'records': [],
+        'usage_log': [],
+        'recovered_log': [],
+        'remaining_log': []
+    },
+}
+for k, v in _defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
@@ -160,7 +178,6 @@ for k, v in {
 # LOGO — load and base64-encode once
 # ============================================================================
 def load_logo_b64(path="logo.png"):
-    """Try to load logo from same directory as app.py. Returns base64 string or None."""
     logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
@@ -170,7 +187,7 @@ def load_logo_b64(path="logo.png"):
 logo_b64 = load_logo_b64()
 
 # ============================================================================
-# HERO — with logo if available, text-only fallback otherwise
+# HERO
 # ============================================================================
 if logo_b64:
     st.markdown(f"""
@@ -183,7 +200,6 @@ if logo_b64:
       </div>
     </div>""", unsafe_allow_html=True)
 else:
-    # Fallback: no logo file found
     st.markdown("""
     <div class="hero-wrap">
       <div class="hero-text">
@@ -192,10 +208,12 @@ else:
         <p class="hero-tag">Renewable energy analysis · Carbon impact measurement · AI-powered monitoring</p>
       </div>
     </div>""", unsafe_allow_html=True)
-    st.info("💡 Tip: Place `logo.png` in the same folder as `app.py` to display the logo in the header.", icon="🖼️")
+    st.info("💡 Tip: Place `logo.png` in the same folder as `app.py` to display the logo.", icon="🖼️")
 
 # ============================================================================
 # MAIN TABS
+# KEY FIX: All 5 tabs are defined at once. Their content is fully self-contained.
+# No tab depends on another tab having rendered first.
 # ============================================================================
 t1, t2, t3, t4, t5 = st.tabs([
     "👥  Introduction",
@@ -212,7 +230,7 @@ with t1:
     st.markdown('<p class="sh">Our Mission</p><div class="al"></div>', unsafe_allow_html=True)
     st.markdown('<div class="ib">EcoGrid is a comprehensive platform that helps communities analyse renewable energy potential, measure environmental impact, and optimise energy consumption. Our toolkit combines AI with practical energy calculations to make clean energy accessible to everyone.</div>', unsafe_allow_html=True)
 
-    for col,(n,l) in zip(st.columns(4),[("5","Modules"),("3","Energy Sources"),("122yrs","Training Data"),("CO₂","Tracked")]):
+    for col, (n, l) in zip(st.columns(4), [("5","Modules"), ("3","Energy Sources"), ("122yrs","Training Data"), ("CO₂","Tracked")]):
         col.markdown(f'<div class="stat-card"><div class="sn">{n}</div><div class="sl">{l}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -260,55 +278,64 @@ with t1:
 with t2:
     st.markdown('<p class="sh">About & Education</p><div class="al"></div><p class="ss">Learn how to get the most out of EcoGrid</p>', unsafe_allow_html=True)
 
-    for i,(title,desc) in enumerate([
-        ("PDF Analyzer","Upload a technical document. Auto-extracts coordinates, waterfall specs, geothermal temperatures and drilling depths."),
-        ("Geographic Calculator","Enter or import location data. Adjust sliders and hit Calculate for power, energy and carbon figures."),
-        ("Time-Series Predictor","With calculator data loaded, run the LSTM predictor trained on 122 years of Bangladesh weather data."),
-        ("Household Energy Status","Enter real-time kWh readings for any sector. The AI engine flags anomalies and recommends actions."),
-        ("Export & AI Reports","Download CSV / JSON or generate a full written report tailored to your audience."),
+    for i, (title, desc) in enumerate([
+        ("PDF Analyzer", "Upload a technical document. Auto-extracts coordinates, waterfall specs, geothermal temperatures and drilling depths."),
+        ("Geographic Calculator", "Enter or import location data. Adjust sliders and hit Calculate for power, energy and carbon figures."),
+        ("Time-Series Predictor", "With calculator data loaded, run the LSTM predictor trained on 122 years of Bangladesh weather data."),
+        ("Household Energy Status", "Enter real-time kWh readings for any sector. The AI engine flags anomalies and recommends actions."),
+        ("Export & AI Reports", "Download CSV / JSON or generate a full written report tailored to your audience."),
     ], 1):
         st.markdown(f'<div class="sr"><div class="snum">{i}</div><div class="sbody"><h4>{title}</h4><p>{desc}</p></div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<p class="sh">Visual Guides</p><div class="al"></div><p class="ss">Add screenshots by uploading images to your project folder and calling st.image()</p>', unsafe_allow_html=True)
     g1, g2 = st.columns(2)
-    for col, lbl in zip([g1,g2], ["Platform Overview","Calculator Walkthrough"]):
+    for col, lbl in zip([g1, g2], ["Platform Overview", "Calculator Walkthrough"]):
         col.markdown(f'<div style="border:2px dashed rgba(46,204,133,.26);border-radius:13px;padding:54px 16px;text-align:center;background:rgba(13,59,46,.18);"><p style="color:rgba(245,240,232,.38);font-size:.96em;margin:0;">📷 {lbl}</p></div>', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — DATA & CALCULATION
+# KEY FIX: Replaced nested st.tabs() with st.radio() selector + conditional
+# rendering. Nested tabs are not officially supported and cause silent failures
+# on Streamlit Cloud that blank out all subsequent top-level tabs.
 # ══════════════════════════════════════════════════════════════════════════════
 with t3:
     st.markdown('<p class="sh">Data & Calculation</p><div class="al"></div>', unsafe_allow_html=True)
 
-    sub1, sub2, sub3 = st.tabs([
-        "📄  PDF Analyzer",
-        "🌍  Geographic Calculator",
-        "📈  Time-Series Predictor",
-    ])
+    # Use radio buttons instead of nested tabs — fully supported on Cloud
+    selected_tool = st.radio(
+        "Select Tool",
+        ["📄  PDF Analyzer", "🌍  Geographic Calculator", "📈  Time-Series Predictor"],
+        horizontal=True,
+        key="data_calc_tool_selector",
+        label_visibility="collapsed"
+    )
 
-    with sub1:
+    st.markdown("---")
+
+    if selected_tool == "📄  PDF Analyzer":
         run_page("pages/1_PDF_Analyzer.py")
 
-    with sub2:
+    elif selected_tool == "🌍  Geographic Calculator":
         run_page("pages/2_Geographic_Calculator.py")
 
-    with sub3:
+    elif selected_tool == "📈  Time-Series Predictor":
         run_page("pages/3_Time_Series_Predictor.py")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 4 — VERIFICATION UNIT
+# This tab is now fully independent — no dependency on tab 3 rendering.
 # ══════════════════════════════════════════════════════════════════════════════
 with t4:
     st.markdown('<p class="sh">Verification Unit</p><div class="al"></div><p class="ss">Hardware integration · Sensors · Physical verification</p>', unsafe_allow_html=True)
 
-    for col,(icon,lbl,status,cls) in zip(st.columns(4),[
-        ("⚡","Sensor Array","Online","hon"),
-        ("📡","Data Link","Connected","hon"),
-        ("🔋","Power Supply","Normal","hwn"),
-        ("🛡️","Verification","Active","hon"),
+    for col, (icon, lbl, status, cls) in zip(st.columns(4), [
+        ("⚡", "Sensor Array",  "Online",    "hon"),
+        ("📡", "Data Link",     "Connected", "hon"),
+        ("🔋", "Power Supply",  "Normal",    "hwn"),
+        ("🛡️", "Verification",  "Active",    "hon"),
     ]):
         col.markdown(f'<div class="hw-card"><div class="hi">{icon}</div><div class="hl">{lbl}</div><div class="{cls}">{status}</div></div>', unsafe_allow_html=True)
 
@@ -316,148 +343,202 @@ with t4:
     hh1, hh2 = st.columns(2)
     with hh1:
         st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">🔧 Physical Equipment</p>', unsafe_allow_html=True)
-        for n,d in [
-            ("Energy meters & CTs","Real-time kWh per phase"),
-            ("DAQ modules","Digitise analogue signals at 1 kHz"),
-            ("IoT gateway / ESP32","Edge processing & MQTT"),
-            ("Environmental sensors","Temp, humidity, irradiance"),
+        for n, d in [
+            ("Energy meters & CTs",    "Real-time kWh per phase"),
+            ("DAQ modules",            "Digitise analogue signals at 1 kHz"),
+            ("IoT gateway / ESP32",    "Edge processing & MQTT"),
+            ("Environmental sensors",  "Temp, humidity, irradiance"),
         ]:
             st.markdown(f'<div style="background:rgba(13,59,46,.28);border:1px solid rgba(46,204,133,.14);border-radius:10px;padding:11px 15px;margin-bottom:8px;"><p style="color:#f5f0e8;font-weight:600;margin:0 0 2px;font-size:.88em;">{n}</p><p style="color:rgba(245,240,232,.42);margin:0;font-size:.78em;">{d}</p></div>', unsafe_allow_html=True)
     with hh2:
         st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">📡 Data & Verification</p>', unsafe_allow_html=True)
-        for n,d in [
-            ("Calibration","Monthly zero-point & span vs. reference"),
-            ("Protocol","MQTT over TLS every 5 s"),
+        for n, d in [
+            ("Calibration",   "Monthly zero-point & span vs. reference"),
+            ("Protocol",      "MQTT over TLS every 5 s"),
             ("Quality control","3σ rejection + CRC checks"),
-            ("Certification","IEC 62052 / ANSI C12.20"),
+            ("Certification", "IEC 62052 / ANSI C12.20"),
         ]:
             st.markdown(f'<div style="background:rgba(13,59,46,.28);border:1px solid rgba(46,204,133,.14);border-radius:10px;padding:11px 15px;margin-bottom:8px;"><p style="color:#f5f0e8;font-weight:600;margin:0 0 2px;font-size:.88em;">{n}</p><p style="color:rgba(245,240,232,.42);margin:0;font-size:.78em;">{d}</p></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<p class="sh">Setup Guide</p><div class="al"></div>', unsafe_allow_html=True)
-    for i,(title,d) in enumerate([
-        ("Wire sensors","Connect CTs around each phase conductor. Use shielded cable for runs > 1 m."),
-        ("Flash firmware","Upload Arduino/ESP32 sketch. Set Wi-Fi SSID & MQTT broker in config.h."),
-        ("Calibrate","Apply 1 kW reference load; adjust CT_RATIO until reading matches."),
-        ("Verify transmission","Check MQTT dashboard — payloads every 5 s, CRC pass > 99.9%."),
-        ("Connect to EcoGrid","Enter broker URL in Household Energy Status tab. Data flows automatically."),
+    for i, (title, d) in enumerate([
+        ("Wire sensors",         "Connect CTs around each phase conductor. Use shielded cable for runs > 1 m."),
+        ("Flash firmware",       "Upload Arduino/ESP32 sketch. Set Wi-Fi SSID & MQTT broker in config.h."),
+        ("Calibrate",            "Apply 1 kW reference load; adjust CT_RATIO until reading matches."),
+        ("Verify transmission",  "Check MQTT dashboard — payloads every 5 s, CRC pass > 99.9%."),
+        ("Connect to EcoGrid",   "Enter broker URL in Household Energy Status tab. Data flows automatically."),
     ], 1):
         st.markdown(f'<div class="sr"><div class="snum">{i}</div><div class="sbody"><h4>{title}</h4><p>{d}</p></div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     hw1, hw2 = st.columns(2)
-    for col, lbl in zip([hw1,hw2], ["Wiring Diagram","Installed Unit Photo"]):
+    for col, lbl in zip([hw1, hw2], ["Wiring Diagram", "Installed Unit Photo"]):
         col.markdown(f'<div style="border:2px dashed rgba(46,204,133,.25);border-radius:12px;padding:50px 14px;text-align:center;background:rgba(13,59,46,.16);"><p style="color:rgba(245,240,232,.35);font-size:.93em;margin:0;">📷 {lbl}</p></div>', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 5 — HOUSEHOLD ENERGY STATUS
+# This tab is now fully independent — no dependency on tab 3 rendering.
+# All helper classes/functions are defined here, not imported from sub-pages.
 # ══════════════════════════════════════════════════════════════════════════════
 with t5:
     st.markdown('<p class="sh">Household Energy Status</p><div class="al"></div><p class="ss">EnergyGuard AI · Keen Edition V4 · Real-time monitoring & optimisation</p>', unsafe_allow_html=True)
 
-    class ER:
-        def __init__(self,u,e,s,t,sl,tmp):
-            self.usage=u; self.expected=e; self.sector=s
-            self.time_of_day=t; self.sunlight=sl; self.temperature=tmp
+    # ── Helper classes & functions (defined inline — no import risk) ──────────
 
-    def eg_ratio(r):   return r.usage/r.expected if r.expected else 0
-    def eg_anomaly(h): return len(h['usage_log'])>=2 and h['usage_log'][-1]>h['usage_log'][-2]*1.25
-    def eg_alert(rt,an): return "CRITICAL" if rt>=1.35 or an else ("WARNING" if rt>=1.15 else "NORMAL")
-    def eg_score(rt):  return round(max(0,min(100,100-abs(rt-1)*75)),1)
-    def eg_recovery(r): w=.3*r.usage; rec=.8*w; return round(rec,2),round(w-rec,2)
+    class EnergyRecord:
+        def __init__(self, u, e, s, t, sl, tmp):
+            self.usage        = u
+            self.expected     = e
+            self.sector       = s
+            self.time_of_day  = t
+            self.sunlight     = sl
+            self.temperature  = tmp
 
-    def eg_ai(r,rt,an,al,rec):
-        reasons,actions,conf=[],[],30
+    def eg_ratio(r):
+        return r.usage / r.expected if r.expected else 0
+
+    def eg_anomaly(h):
+        return len(h['usage_log']) >= 2 and h['usage_log'][-1] > h['usage_log'][-2] * 1.25
+
+    def eg_alert(rt, an):
+        if rt >= 1.35 or an:
+            return "CRITICAL"
+        elif rt >= 1.15:
+            return "WARNING"
+        return "NORMAL"
+
+    def eg_score(rt):
+        return round(max(0, min(100, 100 - abs(rt - 1) * 75)), 1)
+
+    def eg_recovery(r):
+        w   = 0.3 * r.usage
+        rec = 0.8 * w
+        return round(rec, 2), round(w - rec, 2)
+
+    def eg_ai(r, rt, an, al, rec):
+        reasons, actions, conf = [], [], 30
         reasons.append(f"Usage is {rt:.2f}× expected")
-        if an:                reasons.append("Abnormal spike detected"); conf+=15
-        if r.temperature>30:  reasons.append("High temp — cooling load increased"); conf+=10
-        if r.sunlight and r.time_of_day.lower()=="day": reasons.append("Sunlight available but underutilised"); conf+=15
-        if r.sector.lower() in ["factory","power plant"]: reasons.append("High recoverable industrial losses"); conf+=15
+        if an:
+            reasons.append("Abnormal spike detected"); conf += 15
+        if r.temperature > 30:
+            reasons.append("High temp — cooling load increased"); conf += 10
+        if r.sunlight and r.time_of_day.lower() == "day":
+            reasons.append("Sunlight available but underutilised"); conf += 15
+        if r.sector.lower() in ["factory", "power plant"]:
+            reasons.append("High recoverable industrial losses"); conf += 15
+
         actions.append(("HIGH",  f"Continuously recover wasted electricity (~{rec[0]} kWh)"))
         actions.append(("HIGH",  f"System stability reserve (~{rec[1]} kWh)"))
-        if an:   actions.append(("IMMEDIATE","Activate Null Line — capture leakage"))
-        if al=="CRITICAL":
-            actions.append(("IMMEDIATE","Reduce non-essential loads"))
-            actions.append(("HIGH","Shift base load to geothermal/renewable"))
-            if r.sunlight: actions.append(("IMMEDIATE","Activate Smart Daylight-Mirroring System"))
-        elif al=="WARNING": actions.append(("MEDIUM","Optimise operating schedule"))
-        else:               actions.append(("LOW","System operating optimally"))
-        return reasons, actions, min(100,conf)
+        if an:
+            actions.append(("IMMEDIATE", "Activate Null Line — capture leakage"))
+        if al == "CRITICAL":
+            actions.append(("IMMEDIATE", "Reduce non-essential loads"))
+            actions.append(("HIGH",      "Shift base load to geothermal/renewable"))
+            if r.sunlight:
+                actions.append(("IMMEDIATE", "Activate Smart Daylight-Mirroring System"))
+        elif al == "WARNING":
+            actions.append(("MEDIUM", "Optimise operating schedule"))
+        else:
+            actions.append(("LOW", "System operating optimally"))
 
+        return reasons, actions, min(100, conf)
+
+    # ── Form ─────────────────────────────────────────────────────────────────
     with st.form("hh_energy_form"):
         st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;font-size:.94em;margin-bottom:13px;">📊 Enter Energy Reading</p>', unsafe_allow_html=True)
         fi1, fi2 = st.columns(2)
         with fi1:
             usage_v    = st.number_input("Energy usage (kWh)",   min_value=0.0,  step=0.1, value=5.0)
             expected_v = st.number_input("Expected usage (kWh)", min_value=0.01, step=0.1, value=4.0)
-            sector_v   = st.selectbox("Sector", ["Home","Factory","Power Plant"])
+            sector_v   = st.selectbox("Sector", ["Home", "Factory", "Power Plant"])
         with fi2:
-            tod_v      = st.selectbox("Time of Day", ["Day","Night"])
-            sun_v      = st.checkbox("Sunlight available?", value=True)
-            temp_v     = st.number_input("Temperature (°C)", step=0.1, value=25.0)
+            tod_v  = st.selectbox("Time of Day", ["Day", "Night"])
+            sun_v  = st.checkbox("Sunlight available?", value=True)
+            temp_v = st.number_input("Temperature (°C)", step=0.1, value=25.0)
         sub = st.form_submit_button("🔍 Analyse Energy", use_container_width=True)
 
+    # ── Results ───────────────────────────────────────────────────────────────
     if sub:
-        rec_obj = ER(usage_v,expected_v,sector_v,tod_v,sun_v,temp_v)
+        rec_obj = EnergyRecord(usage_v, expected_v, sector_v, tod_v, sun_v, temp_v)
         rt  = eg_ratio(rec_obj)
         an  = eg_anomaly(st.session_state.energy_history_v4)
-        al  = eg_alert(rt,an)
+        al  = eg_alert(rt, an)
         sc  = eg_score(rt)
         rv  = eg_recovery(rec_obj)
 
         h = st.session_state.energy_history_v4
-        h['records'].append(rec_obj); h['usage_log'].append(usage_v)
-        h['recovered_log'].append(rv[0]); h['remaining_log'].append(rv[1])
+        h['records'].append(rec_obj)
+        h['usage_log'].append(usage_v)
+        h['recovered_log'].append(rv[0])
+        h['remaining_log'].append(rv[1])
 
-        if al=="CRITICAL":  st.error("🔴 CRITICAL — Immediate optimisation required!")
-        elif al=="WARNING": st.warning("🟡 WARNING — Efficiency dropping")
-        else:               st.success("🟢 NORMAL — System operating optimally")
+        if al == "CRITICAL":
+            st.error("🔴 CRITICAL — Immediate optimisation required!")
+        elif al == "WARNING":
+            st.warning("🟡 WARNING — Efficiency dropping")
+        else:
+            st.success("🟢 NORMAL — System operating optimally")
 
-        m1,m2,m3,m4 = st.columns(4)
+        m1, m2, m3, m4 = st.columns(4)
         m1.metric("Usage Ratio",      f"{rt:.2f}×")
         m2.metric("Efficiency Score", f"{sc}/100")
         m3.metric("Recovered",        f"{rv[0]} kWh")
         m4.metric("Wasted",           f"{rv[1]} kWh")
 
-        reasons,actions,conf = eg_ai(rec_obj,rt,an,al,rv)
+        reasons, actions, conf = eg_ai(rec_obj, rt, an, al, rv)
+
         st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#2ecc85;margin:18px 0 7px;">🤖 AI Diagnosis</p>', unsafe_allow_html=True)
         for rr in reasons:
             st.markdown(f'<div class="ib">• {rr}</div>', unsafe_allow_html=True)
         st.markdown(f'<p style="color:rgba(245,240,232,.44);font-size:.83em;">Confidence: <strong style="color:#2ecc85;">{conf}%</strong></p>', unsafe_allow_html=True)
 
         st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#2ecc85;margin:16px 0 7px;">🛠️ Recommended Actions</p>', unsafe_allow_html=True)
-        for lvl,act in actions:
-            if lvl=="IMMEDIATE": st.error(f"🚨 **[{lvl}]** {act}")
-            elif lvl=="HIGH":    st.warning(f"⚠️ **[{lvl}]** {act}")
-            elif lvl=="MEDIUM":  st.info(f"ℹ️ **[{lvl}]** {act}")
-            else:                st.success(f"✅ **[{lvl}]** {act}")
+        for lvl, act in actions:
+            if lvl == "IMMEDIATE":
+                st.error(f"🚨 **[{lvl}]** {act}")
+            elif lvl == "HIGH":
+                st.warning(f"⚠️ **[{lvl}]** {act}")
+            elif lvl == "MEDIUM":
+                st.info(f"ℹ️ **[{lvl}]** {act}")
+            else:
+                st.success(f"✅ **[{lvl}]** {act}")
 
         if len(h['usage_log']) >= 2:
             st.markdown('<p style="font-family:\'Syne\',sans-serif;font-weight:700;color:#f5f0e8;margin:20px 0 9px;">📈 Waste Recovery Performance</p>', unsafe_allow_html=True)
-            fig, ax = plt.subplots(figsize=(10,4))
-            fig.patch.set_facecolor('#0a1f17'); ax.set_facecolor('#0d3b2e')
+            fig, ax = plt.subplots(figsize=(10, 4))
+            fig.patch.set_facecolor('#0a1f17')
+            ax.set_facecolor('#0d3b2e')
             xs = range(len(h['usage_log']))
-            ax.plot(xs, h['usage_log'],     label="Total Usage", color="#2ecc85",lw=2.5,marker='o',ms=6)
-            ax.plot(xs, h['recovered_log'], label="Recovered",   color="#4fffb0",lw=2,  marker='s',ms=5)
-            ax.plot(xs, h['remaining_log'], label="Wasted",      color="#c8a96e",lw=2,  marker='^',ms=5)
-            ax.tick_params(colors='#f5f0e8',labelsize=9)
-            ax.set_xlabel("Step",color='#f5f0e8'); ax.set_ylabel("kWh",color='#f5f0e8')
-            for sp in ['top','right']: ax.spines[sp].set_visible(False)
-            for sp in ['left','bottom']: ax.spines[sp].set_color('rgba(46,204,133,.22)')
-            ax.grid(True,alpha=.11,color='#2ecc85')
-            ax.legend(facecolor='#0d3b2e',edgecolor='rgba(46,204,133,.22)',labelcolor='#f5f0e8',fontsize=9)
-            plt.tight_layout(); st.pyplot(fig); plt.close()
+            ax.plot(xs, h['usage_log'],     label="Total Usage", color="#2ecc85", lw=2.5, marker='o', ms=6)
+            ax.plot(xs, h['recovered_log'], label="Recovered",   color="#4fffb0", lw=2,   marker='s', ms=5)
+            ax.plot(xs, h['remaining_log'], label="Wasted",      color="#c8a96e", lw=2,   marker='^', ms=5)
+            ax.tick_params(colors='#f5f0e8', labelsize=9)
+            ax.set_xlabel("Step",  color='#f5f0e8')
+            ax.set_ylabel("kWh",   color='#f5f0e8')
+            for sp in ['top', 'right']:
+                ax.spines[sp].set_visible(False)
+            for sp in ['left', 'bottom']:
+                ax.spines[sp].set_color((46/255, 204/255, 133/255, 0.22))
+            ax.grid(True, alpha=.11, color='#2ecc85')
+            ax.legend(facecolor='#0d3b2e', edgecolor='rgba(46,204,133,.22)', labelcolor='#f5f0e8', fontsize=9)
+            plt.tight_layout()
+            st.pyplot(fig)
+            plt.close()
+
     else:
         st.markdown('<div style="text-align:center;padding:36px 14px;background:rgba(13,59,46,.18);border:1px dashed rgba(46,204,133,.2);border-radius:14px;"><p style="font-size:1.8em;margin-bottom:5px;">⚡</p><p style="color:rgba(245,240,232,.46);margin:0;">Enter data above and click <strong style="color:#2ecc85;">Analyse Energy</strong></p></div>', unsafe_allow_html=True)
+
         h = st.session_state.energy_history_v4
         if h['usage_log']:
             st.dataframe(pd.DataFrame({
-                'Step':      range(1, len(h['usage_log'])+1),
+                'Step':      range(1, len(h['usage_log']) + 1),
                 'Usage':     h['usage_log'],
                 'Recovered': h['recovered_log'],
                 'Wasted':    h['remaining_log'],
             }).tail(10), use_container_width=True)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
