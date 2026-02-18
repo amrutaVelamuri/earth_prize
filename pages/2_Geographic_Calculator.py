@@ -1332,7 +1332,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 with tab1:
     st.header("Energy Potential Calculator")
     col_method, col_spacer = st.columns([2, 3])
-with col_method:
+    with col_method:
     input_method = st.selectbox(
         "📍 Location Input Method",
         ["Manual Entry", "Click on Map", "Use PDF Data", "Batch Analysis (CSV)"],
