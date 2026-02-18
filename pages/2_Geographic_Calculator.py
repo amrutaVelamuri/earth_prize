@@ -1303,7 +1303,6 @@ Whether you're a government official who can facilitate permits, a community mem
 # ============================================================================
 
 
-st.set_page_config(page_title="Geographic Calculator - EcoGrid", layout="wide", page_icon="🌍")
 
 # Initialize session state
 if 'geo_data' not in st.session_state:
@@ -1318,12 +1317,7 @@ if 'linked_locations' not in st.session_state:
 st.title("🌍 Geographic Energy Calculator")
 st.markdown("*Map-based renewable energy potential & carbon impact analysis*")
 
-# Sidebar: Input Method
-st.sidebar.header("Location Input")
-input_method = st.sidebar.radio(
-    "Choose input method:",
-    ["Manual Entry", "Click on Map", "Use PDF Data", "Batch Analysis (CSV)"]
-)
+
 
 # Main Content
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -1337,11 +1331,18 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 # TAB 1: CALCULATE
 with tab1:
     st.header("Energy Potential Calculator")
+    col_method, col_spacer = st.columns([2, 3])
+with col_method:
+    input_method = st.selectbox(
+        "📍 Location Input Method",
+        ["Manual Entry", "Click on Map", "Use PDF Data", "Batch Analysis (CSV)"],
+        help="Choose how to provide location coordinates"
+    )
     
     # Alert user if map coordinates are available but not being used
     if 'clicked_lat' in st.session_state.geo_data and 'clicked_lng' in st.session_state.geo_data:
         if input_method != "Click on Map":
-            st.warning(f"Map coordinates available: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}. Change input method to 'Click on Map' in the sidebar to use them.")
+            st.warning(f"Map coordinates available: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}. Change input method to 'Click on Map' in the dropdown to use them.")
     
     # Determine default values based on input method
     if input_method == "Use PDF Data" and st.session_state.pdf_extracted:
