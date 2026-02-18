@@ -522,7 +522,7 @@ with t5:
             for sp in ['left', 'bottom']:
                 ax.spines[sp].set_color((46/255, 204/255, 133/255, 0.22))
             ax.grid(True, alpha=.11, color='#2ecc85')
-            ax.legend(facecolor='#0d3b2e', edgecolor='rgba(46,204,133,.22)', labelcolor='#f5f0e8', fontsize=9)
+            ax.legend(facecolor='#0d3b2e', edgecolor=(46/255, 204/255, 133/255, 0.22), labelcolor='#f5f0e8', fontsize=9)
             plt.tight_layout()
             st.pyplot(fig)
             plt.close()
