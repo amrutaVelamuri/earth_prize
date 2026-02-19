@@ -45,7 +45,7 @@ html, body, [class*="css"] {
 .hero-wrap {
     background: linear-gradient(135deg, #0a2e22 0%, #071f17 50%, #040f0b 100%);
     border: 1px solid var(--bd); border-radius: 24px;
-    padding: 52px 56px 52px 52px; margin-bottom: 36px; min-height: 200px;
+    padding: 44px 52px; margin-bottom: 36px;
     position: relative; overflow: hidden;
     display: flex; align-items: center; gap: 40px;
 }
@@ -55,19 +55,19 @@ html, body, [class*="css"] {
     pointer-events: none;
 }
 .hero-logo-img {
-    width: 160px; height: 160px; object-fit: contain; flex-shrink: 0;
+    width: 130px; height: 130px; object-fit: contain; flex-shrink: 0;
     filter: drop-shadow(0 0 20px rgba(46,204,133,0.3)) brightness(1.05);
     position: relative; z-index: 1; border-radius: 16px;
 }
 .hero-text { position: relative; z-index: 1; }
 .hero-logo {
-    font-family: var(--font-head) !important; font-size: clamp(3rem, 5vw, 5.5rem) !important; font-weight: 800 !important;
-    color: var(--gb) !important; letter-spacing: -3px !important; line-height: 1 !important; margin: 0 !important;
+    font-family: var(--font-head); font-size: 3.6em; font-weight: 800;
+    color: var(--gb); letter-spacing: -2.5px; line-height: 1; margin: 0;
 }
 .hero-logo span { color: var(--ea); }
 .hero-tag {
-    font-family: var(--font-body); font-size: 1.05em; font-weight: 400;
-    color: rgba(240,237,232,.55); margin: 12px 0 0; line-height: 1.6;
+    font-family: var(--font-body); font-size: 1em; font-weight: 400;
+    color: rgba(240,237,232,.55); margin: 10px 0 0; line-height: 1.5;
 }
 .hero-badge {
     display: inline-block;
@@ -172,13 +172,26 @@ div[data-testid="stMetricLabel"] { color: rgba(240,237,232,.45) !important; font
     font-family: var(--font-body); font-size: .76em;
     border-top: 1px solid rgba(46,204,133,.1); margin-top: 42px;
 }
+.pdf-container {
+    background: rgba(10,35,25,.4); border: 1px solid rgba(46,204,133,.18);
+    border-radius: 16px; padding: 20px; margin-top: 24px;
+}
+.pdf-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.pdf-title {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1em;
+    font-weight: 700; color: #f0ede8; margin: 0;
+}
+.pdf-subtitle {
+    font-family: 'Inter', sans-serif; font-size: .78em;
+    color: rgba(240,237,232,.42); margin: 2px 0 0;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================================================
 # HELPER — run a page file inside the current tab context
-# KEY FIX: We now catch ALL exceptions including StopException from Streamlit
-# and never let them bubble up to corrupt subsequent tabs.
 # ============================================================================
 def run_page(filepath: str):
     """Run a page file in-place. Fully isolated so failures never blank out later tabs."""
@@ -195,9 +208,7 @@ def run_page(filepath: str):
     except SystemExit:
         pass
     except Exception as e:
-        # Catch Streamlit's internal StopException too (it inherits from Exception)
         err_name = type(e).__name__
-        # StopException is Streamlit's internal stop signal — swallow it silently
         if "StopException" in err_name or "RerunException" in err_name:
             pass
         else:
@@ -205,9 +216,7 @@ def run_page(filepath: str):
 
 
 # ============================================================================
-# SESSION STATE — initialise ALL keys up front before any tab renders
-# This is critical: if session state is initialised inside a tab,
-# Streamlit Cloud may not have it ready when other tabs render.
+# SESSION STATE — initialise ALL keys up front
 # ============================================================================
 _defaults = {
     'geo_data': {},
@@ -228,14 +237,15 @@ for k, v in _defaults.items():
 # ============================================================================
 # LOGO — load and base64-encode once
 # ============================================================================
-def load_logo_b64(path="logo.png"):
-    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
-    if os.path.exists(logo_path):
-        with open(logo_path, "rb") as f:
+def load_file_b64(path):
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
+    if os.path.exists(abs_path):
+        with open(abs_path, "rb") as f:
             return base64.b64encode(f.read()).decode()
     return None
 
-logo_b64 = load_logo_b64()
+logo_b64    = load_file_b64("logo.png")
+textbook_b64 = load_file_b64("EcoGrid Toolkit Textbook.pdf")
 
 # ============================================================================
 # HERO
@@ -263,8 +273,6 @@ else:
 
 # ============================================================================
 # MAIN TABS
-# KEY FIX: All 5 tabs are defined at once. Their content is fully self-contained.
-# No tab depends on another tab having rendered first.
 # ============================================================================
 t1, t2, t3, t4, t5 = st.tabs([
     "👥  Introduction",
@@ -294,7 +302,6 @@ with t1:
         {"i":"04","g":"linear-gradient(135deg,rgba(46,204,133,.2),rgba(8,20,14,.8))","n":"Shyam","r":"Co-Founder","b":"Add a short bio here."},
         {"i":"05","g":"linear-gradient(135deg,rgba(133,196,255,.2),rgba(8,20,14,.8))","n":"Advika","r":"Co-Founder","b":"Add a short bio here."},
     ]
-    # 5 co-founders: use 3+2 layout for even spacing
     row1 = st.columns(3)
     row2_spacer1, row2_a, row2_b, row2_spacer2 = st.columns([0.5, 1, 1, 0.5])
     cols = list(row1) + [row2_a, row2_b]
@@ -346,22 +353,204 @@ with t2:
         st.markdown(f'<div class="sr"><div class="snum">{i}</div><div class="sbody"><h4>{title}</h4><p>{desc}</p></div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<p class="sh">Visual Guides</p><div class="al"></div><p class="ss">Add screenshots by uploading images to your project folder and calling st.image()</p>', unsafe_allow_html=True)
-    g1, g2 = st.columns(2)
-    for col, lbl in zip([g1, g2], ["Platform Overview", "Calculator Walkthrough"]):
-        col.markdown(f'<div style="border:2px dashed rgba(46,204,133,.26);border-radius:13px;padding:54px 16px;text-align:center;background:rgba(13,59,46,.18);"><p style="color:rgba(245,240,232,.38);font-size:.96em;margin:0;">📷 {lbl}</p></div>', unsafe_allow_html=True)
+
+    # ── EcoGrid Textbook PDF Embed ────────────────────────────────────────────
+    st.markdown('<p class="sh">EcoGrid Textbook</p><div class="al"></div><p class="ss">Our full educational reference — read it right here or download below</p>', unsafe_allow_html=True)
+
+    if textbook_b64:
+        import streamlit.components.v1 as components
+
+        # Header card (pure markdown — no base64 in here)
+        st.markdown("""
+        <div class="pdf-container">
+          <div class="pdf-header">
+            <span style="font-size:1.6em;">📖</span>
+            <div>
+              <p class="pdf-title">EcoGrid Toolkit Textbook</p>
+              <p class="pdf-subtitle">Scroll inside the viewer · Use the toolbar to zoom or go full-screen</p>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Render PDF using PDF.js via CDN — works in all browsers on Streamlit Cloud
+        # PDF.js fetches the file from a blob URL we build in JS, bypassing browser base64 blocks
+        pdf_js_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8"/>
+          <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ background: #1a1a1a; font-family: Inter, sans-serif; }}
+            #controls {{
+              display: flex; align-items: center; gap: 10px;
+              background: #0d3b2e; padding: 8px 14px;
+              border-top: 1px solid rgba(46,204,133,.25);
+            }}
+            #controls button {{
+              background: #2ecc85; color: #061a11; border: none;
+              border-radius: 6px; padding: 5px 12px; font-size: 13px;
+              font-weight: 600; cursor: pointer;
+            }}
+            #controls button:hover {{ background: #4fffb0; }}
+            #controls span {{ color: rgba(240,237,232,.6); font-size: 13px; }}
+            #page-num {{ color: #2ecc85; font-weight: 600; font-size: 13px; min-width: 80px; text-align:center; }}
+            #canvas-container {{
+              overflow-y: auto; height: 780px;
+              display: flex; flex-direction: column; align-items: center;
+              gap: 12px; padding: 16px 8px; background: #222;
+            }}
+            canvas {{
+              box-shadow: 0 4px 20px rgba(0,0,0,.5);
+              border-radius: 4px; background: white;
+              max-width: 100%;
+            }}
+            #loading {{
+              color: #2ecc85; font-size: 15px; padding: 40px;
+              text-align: center;
+            }}
+          </style>
+        </head>
+        <body>
+          <div id="canvas-container">
+            <div id="loading">⏳ Loading textbook…</div>
+          </div>
+          <div id="controls">
+            <button onclick="prevPage()">◀ Prev</button>
+            <span id="page-num">Loading…</span>
+            <button onclick="nextPage()">Next ▶</button>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+              <button onclick="zoomOut()" title="Zoom out">−</button>
+              <span id="zoom-level" style="color:rgba(240,237,232,.6); font-size:12px; min-width:40px; text-align:center;">160%</span>
+              <button onclick="zoomIn()" title="Zoom in">+</button>
+            </div>
+          </div>
+
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+          <script>
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+              'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            // Decode base64 → Uint8Array (avoids browser blob URL restrictions)
+            const b64 = `{textbook_b64}`;
+            const binary = atob(b64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+            let pdfDoc = null;
+            let currentPage = 1;
+            let currentScale = 1.6;
+            const container = document.getElementById('canvas-container');
+            const pageNum   = document.getElementById('page-num');
+            const zoomLabel = document.getElementById('zoom-level');
+
+            async function renderPage(num) {{
+              const page = await pdfDoc.getPage(num);
+              const viewport = page.getViewport({{ scale: currentScale }});
+
+              const canvas = document.createElement('canvas');
+              canvas.width  = viewport.width;
+              canvas.height = viewport.height;
+
+              const ctx = canvas.getContext('2d');
+              await page.render({{ canvasContext: ctx, viewport }}).promise;
+              return canvas;
+            }}
+
+            function zoomIn() {{
+              if (currentScale >= 3.0) return;
+              currentScale = Math.round((currentScale + 0.2) * 10) / 10;
+              zoomLabel.textContent = Math.round(currentScale / 1.6 * 100) + '%';
+              rerenderCurrent();
+            }}
+
+            function zoomOut() {{
+              if (currentScale <= 0.6) return;
+              currentScale = Math.round((currentScale - 0.2) * 10) / 10;
+              zoomLabel.textContent = Math.round(currentScale / 1.6 * 100) + '%';
+              rerenderCurrent();
+            }}
+
+            async function rerenderCurrent() {{
+              container.innerHTML = '<div id="loading">⏳ Re-rendering…</div>';
+              const canvas = await renderPage(currentPage);
+              container.innerHTML = '';
+              container.appendChild(canvas);
+            }}
+
+            async function loadPDF() {{
+              try {{
+                pdfDoc = await pdfjsLib.getDocument({{ data: bytes }}).promise;
+                container.innerHTML = '';
+                pageNum.textContent = `Page ${{currentPage}} / ${{pdfDoc.numPages}}`;
+                const canvas = await renderPage(currentPage);
+                container.appendChild(canvas);
+              }} catch(e) {{
+                container.innerHTML = `<div id="loading" style="color:#f87171;">❌ Error loading PDF: ${{e.message}}</div>`;
+              }}
+            }}
+
+            async function prevPage() {{
+              if (currentPage <= 1) return;
+              currentPage--;
+              container.innerHTML = '<div id="loading">⏳ Loading…</div>';
+              pageNum.textContent = `Page ${{currentPage}} / ${{pdfDoc.numPages}}`;
+              const canvas = await renderPage(currentPage);
+              container.innerHTML = '';
+              container.appendChild(canvas);
+            }}
+
+            async function nextPage() {{
+              if (currentPage >= pdfDoc.numPages) return;
+              currentPage++;
+              container.innerHTML = '<div id="loading">⏳ Loading…</div>';
+              pageNum.textContent = `Page ${{currentPage}} / ${{pdfDoc.numPages}}`;
+              const canvas = await renderPage(currentPage);
+              container.innerHTML = '';
+              container.appendChild(canvas);
+            }}
+
+            loadPDF();
+          </script>
+        </body>
+        </html>
+        """
+
+        components.html(pdf_js_html, height=870, scrolling=False)
+
+        # Download button — always available
+        pdf_bytes = base64.b64decode(textbook_b64)
+        st.download_button(
+            label="⬇️  Download Textbook PDF",
+            data=pdf_bytes,
+            file_name="EcoGrid Toolkit Textbook.pdf",
+            mime="application/pdf",
+            use_container_width=False,
+        )
+    else:
+        st.markdown("""
+        <div style="border:2px dashed rgba(46,204,133,.26);border-radius:13px;padding:54px 16px;
+                    text-align:center;background:rgba(13,59,46,.18);">
+          <p style="font-size:2em;margin-bottom:8px;">📄</p>
+          <p style="color:rgba(245,240,232,.55);font-size:.95em;margin:0 0 6px;">
+            <strong style="color:#2ecc85;">EcoGrid Toolkit Textbook.pdf</strong> not found
+          </p>
+          <p style="color:rgba(245,240,232,.35);font-size:.82em;margin:0;">
+            Place the file in the same folder as <code>app.py</code> and restart the app.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — DATA & CALCULATION
-# KEY FIX: Replaced nested st.tabs() with st.radio() selector + conditional
-# rendering. Nested tabs are not officially supported and cause silent failures
-# on Streamlit Cloud that blank out all subsequent top-level tabs.
 # ══════════════════════════════════════════════════════════════════════════════
 with t3:
     st.markdown('<p class="sh">Data & Calculation</p><div class="al"></div>', unsafe_allow_html=True)
 
-    # Use radio buttons instead of nested tabs — fully supported on Cloud
     selected_tool = st.radio(
         "Select Tool",
         ["📄  PDF Analyzer", "🌍  Geographic Calculator", "📈  Time-Series Predictor"],
@@ -384,7 +573,6 @@ with t3:
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 4 — VERIFICATION UNIT
-# This tab is now fully independent — no dependency on tab 3 rendering.
 # ══════════════════════════════════════════════════════════════════════════════
 with t4:
     st.markdown('<p class="sh">Verification Unit</p><div class="al"></div><p class="ss">Hardware integration · Sensors · Physical verification</p>', unsafe_allow_html=True)
@@ -437,13 +625,11 @@ with t4:
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 5 — HOUSEHOLD ENERGY STATUS
-# This tab is now fully independent — no dependency on tab 3 rendering.
-# All helper classes/functions are defined here, not imported from sub-pages.
 # ══════════════════════════════════════════════════════════════════════════════
 with t5:
     st.markdown('<p class="sh">Household Energy Status</p><div class="al"></div><p class="ss">EnergyGuard AI · Keen Edition V4 · Real-time monitoring & optimisation</p>', unsafe_allow_html=True)
 
-    # ── Helper classes & functions (defined inline — no import risk) ──────────
+    # ── Helper classes & functions ────────────────────────────────────────────
 
     class EnergyRecord:
         def __init__(self, u, e, s, t, sl, tmp):
