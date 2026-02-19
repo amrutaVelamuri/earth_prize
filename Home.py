@@ -342,16 +342,118 @@ with t1:
 # TAB 2 — ABOUT & EDUCATION
 # ══════════════════════════════════════════════════════════════════════════════
 with t2:
-    st.markdown('<p class="sh">About & Education</p><div class="al"></div><p class="ss">Learn how to get the most out of EcoGrid</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sh">How to Use EcoGrid</p><div class="al"></div><p class="ss">Follow the steps below — each module feeds into the next</p>', unsafe_allow_html=True)
 
-    for i, (title, desc) in enumerate([
-        ("PDF Analyzer", "Upload a technical document. Auto-extracts coordinates, waterfall specs, geothermal temperatures and drilling depths."),
-        ("Geographic Calculator", "Enter or import location data. Adjust sliders and hit Calculate for power, energy and carbon figures."),
-        ("Time-Series Predictor", "With calculator data loaded, run the LSTM predictor trained on 122 years of Bangladesh weather data."),
-        ("Household Energy Status", "Enter real-time kWh readings for any sector. The AI engine flags anomalies and recommends actions."),
-        ("Export & AI Reports", "Download CSV / JSON or generate a full written report tailored to your audience."),
-    ], 1):
-        st.markdown(f'<div class="sr"><div class="snum">{i}</div><div class="sbody"><h4>{title}</h4><p>{desc}</p></div></div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.3);
+                border-radius:12px;padding:14px 20px;margin-bottom:24px;">
+      <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                color:#c8a96e;font-size:.85em;margin:0 0 10px;
+                text-transform:uppercase;letter-spacing:.08em;">⚡ Before You Start — You'll Need</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <span style="background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.25);
+                     color:#c8a96e;border-radius:6px;padding:4px 12px;
+                     font-family:Inter,sans-serif;font-size:.78em;font-weight:500;">📍 Location coordinates</span>
+        <span style="background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.25);
+                     color:#c8a96e;border-radius:6px;padding:4px 12px;
+                     font-family:Inter,sans-serif;font-size:.78em;font-weight:500;">💧 Waterfall height &amp; flow rate (m³/s)</span>
+        <span style="background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.25);
+                     color:#c8a96e;border-radius:6px;padding:4px 12px;
+                     font-family:Inter,sans-serif;font-size:.78em;font-weight:500;">🌡️ Geothermal temp (°C) &amp; depth (km)</span>
+        <span style="background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.25);
+                     color:#c8a96e;border-radius:6px;padding:4px 12px;
+                     font-family:Inter,sans-serif;font-size:.78em;font-weight:500;">📄 Technical PDF (optional)</span>
+        <span style="background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.25);
+                     color:#c8a96e;border-radius:6px;padding:4px 12px;
+                     font-family:Inter,sans-serif;font-size:.78em;font-weight:500;">🏠 Real-time kWh readings (optional)</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    STEPS = [
+        {"num":"01","icon":"📄","title":"PDF Analyzer","tab":"Tab 3 → PDF Analyzer","color":"#818cf8",
+         "what":"Upload a technical site document",
+         "gets":["Auto-extracts coordinates","Pulls waterfall height & flow","Reads geothermal temp & depth"],
+         "tip":"Skip this if you already have your specs — go straight to Step 2",
+         "unlocks":"Sends data directly to the Calculator"},
+        {"num":"02","icon":"🌍","title":"Geographic Calculator","tab":"Tab 3 → Geographic Calculator","color":"#2ecc85",
+         "what":"Enter or import your location specs",
+         "gets":["Power output (MW)","Annual energy (MWh/yr)","CO₂ saved & homes powered","Waste energy recovered"],
+         "tip":"This is the core step — everything else depends on running this first",
+         "unlocks":"Populates live map, carbon charts & Verification Unit"},
+        {"num":"03","icon":"📈","title":"Time-Series Predictor","tab":"Tab 3 → Time-Series Predictor","color":"#38bdf8",
+         "what":"Run the LSTM AI forecast",
+         "gets":["Monthly energy predictions","Seasonal climate adjustments","Confidence intervals","Up to 24-month forecast"],
+         "tip":"Must run the Calculator first — LSTM uses that data as its base",
+         "unlocks":"Exportable CSV / JSON forecast report"},
+        {"num":"04","icon":"🔌","title":"Verification Unit","tab":"Tab 4","color":"#f97316",
+         "what":"Verify hardware against software output",
+         "gets":["Live stats on prototype diagram","Clickable hotspots per component","Component status cards","Real vs calculated comparison"],
+         "tip":"Click any component on the diagram to see its live data popup",
+         "unlocks":"Visual proof that hardware & software match"},
+        {"num":"05","icon":"🏠","title":"Household Energy Monitor","tab":"Tab 5","color":"#c8a96e",
+         "what":"Enter real-time kWh readings",
+         "gets":["Anomaly detection","AI diagnosis & confidence score","Recovery recommendations","Usage trend chart"],
+         "tip":"Works independently — no need to run the Calculator first",
+         "unlocks":"Actionable efficiency recommendations"},
+    ]
+
+    for s in STEPS:
+        gets_html = "".join([
+            f'<span style="background:rgba(46,204,133,.08);border:1px solid rgba(46,204,133,.2);'
+            f'color:rgba(46,204,133,.9);border-radius:5px;padding:3px 9px;'
+            f'font-family:Inter,sans-serif;font-size:.74em;font-weight:500;'
+            f'display:inline-block;margin:2px 3px;">{g}</span>'
+            for g in s["gets"]
+        ])
+        st.markdown(f"""
+        <div style="background:rgba(13,59,46,.25);border:1px solid rgba(46,204,133,.12);
+                    border-left:3px solid {s['color']};border-radius:0 14px 14px 0;
+                    padding:18px 20px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+            <div style="background:linear-gradient(135deg,rgba(46,204,133,.2),rgba(8,20,14,.8));
+                        border:1px solid {s['color']}44;border-radius:10px;
+                        width:46px;height:46px;display:flex;align-items:center;
+                        justify-content:center;font-size:1.3em;flex-shrink:0;">{s['icon']}</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                             color:#f0ede8;font-size:.95em;">Step {s['num']} · {s['title']}</span>
+                <span style="background:{s['color']}22;border:1px solid {s['color']}44;
+                             color:{s['color']};border-radius:5px;padding:2px 9px;
+                             font-family:Inter,sans-serif;font-size:.7em;font-weight:600;
+                             text-transform:uppercase;letter-spacing:.07em;">{s['tab']}</span>
+              </div>
+              <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.45);
+                        font-size:.78em;margin:3px 0 0;">{s['what']}</p>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">{gets_html}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+            <div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.2);
+                        border-radius:7px;padding:5px 10px;flex:1;min-width:180px;">
+              <span style="font-family:Inter,sans-serif;font-size:.73em;
+                           color:rgba(200,169,110,.8);">💡 {s['tip']}</span>
+            </div>
+            <div style="background:rgba(46,204,133,.06);border:1px solid rgba(46,204,133,.18);
+                        border-radius:7px;padding:5px 10px;flex:1;min-width:180px;">
+              <span style="font-family:Inter,sans-serif;font-size:.73em;
+                           color:rgba(46,204,133,.7);">🔓 {s['unlocks']}</span>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="text-align:center;padding:14px;margin:8px 0 24px;">
+      <span style="font-family:Inter,sans-serif;font-size:.8em;color:rgba(240,237,232,.3);
+                   letter-spacing:.05em;">RECOMMENDED FLOW &nbsp;·&nbsp;</span>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:.82em;
+                   color:rgba(46,204,133,.6);font-weight:600;">
+        PDF Analyzer → Calculator → LSTM Predictor → Verification Unit → Household Monitor
+      </span>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
