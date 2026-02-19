@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
+import streamlit.components.v1 as components
 
 # ============================================================================
 # PAGE CONFIG — sidebar hidden entirely
@@ -134,6 +135,7 @@ html, body, [class*="css"] {
 .hl { font-family: var(--font-body); font-size: .78em; font-weight: 600; color: rgba(240,237,232,.7); text-transform: uppercase; letter-spacing: .08em; }
 .hon { color: var(--gb); font-size: .88em; font-weight: 600; margin-top: 6px; }
 .hwn { color: var(--ea); font-size: .88em; font-weight: 600; margin-top: 6px; }
+.hof { color: rgba(240,237,232,.3); font-size: .88em; font-weight: 600; margin-top: 6px; }
 .ib {
     background: rgba(10,35,25,.5); border-left: 2px solid var(--gb);
     border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 8px 0;
@@ -194,7 +196,6 @@ div[data-testid="stMetricLabel"] { color: rgba(240,237,232,.45) !important; font
 # HELPER — run a page file inside the current tab context
 # ============================================================================
 def run_page(filepath: str):
-    """Run a page file in-place. Fully isolated so failures never blank out later tabs."""
     abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filepath)
     if not os.path.exists(abs_path):
         st.error(f"File not found: {filepath}")
@@ -216,7 +217,7 @@ def run_page(filepath: str):
 
 
 # ============================================================================
-# SESSION STATE — initialise ALL keys up front
+# SESSION STATE
 # ============================================================================
 _defaults = {
     'geo_data': {},
@@ -235,7 +236,7 @@ for k, v in _defaults.items():
         st.session_state[k] = v
 
 # ============================================================================
-# LOGO — load and base64-encode once
+# LOGO
 # ============================================================================
 def load_file_b64(path):
     abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
@@ -244,7 +245,7 @@ def load_file_b64(path):
             return base64.b64encode(f.read()).decode()
     return None
 
-logo_b64    = load_file_b64("logo.png")
+logo_b64     = load_file_b64("logo.png")
 textbook_b64 = load_file_b64("EcoGrid Toolkit Textbook.pdf")
 
 # ============================================================================
@@ -354,13 +355,9 @@ with t2:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── EcoGrid Textbook PDF Embed ────────────────────────────────────────────
     st.markdown('<p class="sh">EcoGrid Textbook</p><div class="al"></div><p class="ss">Our full educational reference — read it right here or download below</p>', unsafe_allow_html=True)
 
     if textbook_b64:
-        import streamlit.components.v1 as components
-
-        # Header card (pure markdown — no base64 in here)
         st.markdown("""
         <div class="pdf-container">
           <div class="pdf-header">
@@ -373,8 +370,6 @@ with t2:
         </div>
         """, unsafe_allow_html=True)
 
-        # Render PDF using PDF.js via CDN — works in all browsers on Streamlit Cloud
-        # PDF.js fetches the file from a blob URL we build in JS, bypassing browser base64 blocks
         pdf_js_html = f"""
         <!DOCTYPE html>
         <html>
@@ -432,7 +427,6 @@ with t2:
             pdfjsLib.GlobalWorkerOptions.workerSrc =
               'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-            // Decode base64 → Uint8Array (avoids browser blob URL restrictions)
             const b64 = `{textbook_b64}`;
             const binary = atob(b64);
             const bytes = new Uint8Array(binary.length);
@@ -448,11 +442,9 @@ with t2:
             async function renderPage(num) {{
               const page = await pdfDoc.getPage(num);
               const viewport = page.getViewport({{ scale: currentScale }});
-
               const canvas = document.createElement('canvas');
               canvas.width  = viewport.width;
               canvas.height = viewport.height;
-
               const ctx = canvas.getContext('2d');
               await page.render({{ canvasContext: ctx, viewport }}).promise;
               return canvas;
@@ -519,7 +511,6 @@ with t2:
 
         components.html(pdf_js_html, height=870, scrolling=False)
 
-        # Download button — always available
         pdf_bytes = base64.b64decode(textbook_b64)
         st.download_button(
             label="⬇️  Download Textbook PDF",
@@ -543,8 +534,6 @@ with t2:
         """, unsafe_allow_html=True)
 
 
-
-
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — DATA & CALCULATION
 # ══════════════════════════════════════════════════════════════════════════════
@@ -563,10 +552,8 @@ with t3:
 
     if selected_tool == "📄  PDF Analyzer":
         run_page("pages/1_PDF_Analyzer.py")
-
     elif selected_tool == "🌍  Geographic Calculator":
         run_page("pages/2_Geographic_Calculator.py")
-
     elif selected_tool == "📈  Time-Series Predictor":
         run_page("pages/3_Time_Series_Predictor.py")
 
@@ -575,52 +562,483 @@ with t3:
 # TAB 4 — VERIFICATION UNIT
 # ══════════════════════════════════════════════════════════════════════════════
 with t4:
-    st.markdown('<p class="sh">Verification Unit</p><div class="al"></div><p class="ss">Hardware integration · Sensors · Physical verification</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sh">Verification Unit</p><div class="al"></div>'
+                '<p class="ss">Physical prototype · Live data overlay · Real-time component status</p>',
+                unsafe_allow_html=True)
 
-    for col, (icon, lbl, status, cls) in zip(st.columns(4), [
-        ("⚡", "Sensor Array",  "Online",    "hon"),
-        ("📡", "Data Link",     "Connected", "hon"),
-        ("🔋", "Power Supply",  "Normal",    "hwn"),
-        ("🛡️", "Verification",  "Active",    "hon"),
-    ]):
-        col.markdown(f'<div class="hw-card"><div class="hi">{icon}</div><div class="hl">{lbl}</div><div class="{cls}">{status}</div></div>', unsafe_allow_html=True)
+    gd           = st.session_state.get('geo_data', {})
+    has_calc     = bool(gd.get('P_total_MW'))
+    has_hydro    = bool(gd.get('has_waterfall'))
+    has_geo      = bool(gd.get('has_geothermal'))
+    has_orc      = has_hydro or has_geo
+
+    p_hydro_mw   = gd.get('P_waterfall_MW', 0)
+    p_geo_mw     = gd.get('P_geo_MW', 0)
+    p_total_mw   = gd.get('P_total_MW', 0)
+    e_orc_mwh    = gd.get('E_waste_recovered_MWh', 0)
+    p_orc_mw     = e_orc_mwh / 8760 if e_orc_mwh else 0
+    geo_temp     = gd.get('geo_temp', 0)
+    depth_km     = gd.get('depth', 0)
+    flow_rate    = gd.get('waterfall_flow', 0)
+    fall_height  = gd.get('waterfall_height', 0)
+    carbon_saved = gd.get('carbon_saved_tons', 0)
+    households   = gd.get('households_total', 0)
+    loc_name     = gd.get('location_name', '—')
+    pipe_mat     = gd.get('pipe_material', '—')
+
+    def hw_card(icon, label, active, val_line, status_txt):
+        if active:
+            dot_cls = "live-dot"; val_col = "#2ecc85"; stat_cls = "hon"
+        elif has_calc:
+            dot_cls = "live-dot live-dot-warn"; val_col = "#c8a96e"; stat_cls = "hwn"
+        else:
+            dot_cls = "live-dot live-dot-off"; val_col = "rgba(240,237,232,.28)"; stat_cls = "hof"
+        dot_style = "display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;"
+        if "warn" in dot_cls:
+            dot_style += "background:#c8a96e;"
+        elif "off" in dot_cls:
+            dot_style += "background:rgba(240,237,232,.22);"
+        else:
+            dot_style += "background:#2ecc85;"
+        return f"""<div class="hw-card">
+          <div class="hi">{icon}</div>
+          <div class="hl">{label}</div>
+          <div style="font-family:'Inter',sans-serif;font-size:.82em;font-weight:700;
+                      color:{val_col};margin-top:5px;">{val_line}</div>
+          <div class="{stat_cls}"><span style="{dot_style}"></span>{status_txt}</div>
+        </div>"""
+
+    if has_calc:
+        hyd_val  = f"{p_hydro_mw:.2f} MW" if has_hydro else "—"
+        geo_val  = f"{p_geo_mw:.2f} MW · {geo_temp:.0f}°C" if has_geo else "—"
+        orc_val  = f"{p_orc_mw:.3f} MW" if has_orc else "—"
+        grd_val  = f"{p_total_mw:.2f} MW total"
+        day_val  = "Passive · active"
+        hyd_st   = "Active · generating" if has_hydro else "No hydro data"
+        geo_st   = "Active · generating" if has_geo   else "No geo data"
+        orc_st   = "Capturing waste"     if has_orc   else "No source data"
+        grd_st   = "Routing power"
+        day_st   = "Sunlight harvesting"
+    else:
+        hyd_val = geo_val = orc_val = grd_val = day_val = "Run calculator →"
+        hyd_st  = geo_st  = orc_st  = grd_st  = day_st  = "Awaiting data"
+
+    c5 = st.columns(5)
+    c5[0].markdown(hw_card("💧","Hydro System",   has_hydro, hyd_val, hyd_st), unsafe_allow_html=True)
+    c5[1].markdown(hw_card("🌋","Geothermal",     has_geo,   geo_val, geo_st), unsafe_allow_html=True)
+    c5[2].markdown(hw_card("♻️","ORC Recovery",   has_orc,   orc_val, orc_st), unsafe_allow_html=True)
+    c5[3].markdown(hw_card("⚡","Grid Control",   has_calc,  grd_val, grd_st), unsafe_allow_html=True)
+    c5[4].markdown(hw_card("☀️","Daylight Tower", has_calc,  day_val, day_st), unsafe_allow_html=True)
+
+    if not has_calc:
+        st.info("💡 Run the **Geographic Calculator** in Tab 3 — live values will populate the diagram and cards above automatically.", icon="📊")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    hh1, hh2 = st.columns(2)
-    with hh1:
-        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">🔧 Physical Equipment</p>', unsafe_allow_html=True)
-        for n, d in [
-            ("Energy meters & CTs",    "Real-time kWh per phase"),
-            ("DAQ modules",            "Digitise analogue signals at 1 kHz"),
-            ("IoT gateway / ESP32",    "Edge processing & MQTT"),
-            ("Environmental sensors",  "Temp, humidity, irradiance"),
+
+    st.markdown('<p class="sh">Physical Prototype</p><div class="al"></div>'
+                '<p class="ss">Autodesk Fusion 360 CAD model · Colour-coded by energy type · '
+                'Live data from your calculations overlaid below</p>', unsafe_allow_html=True)
+
+    hw_img_b64 = load_file_b64('hardware_diagram.png')
+
+    if hw_img_b64:
+        # ── Build overlay labels as plain Python strings (no HTML comments, no CSS classes) ──
+        if has_calc:
+            # Hydro label
+            hydro_border = "rgba(200,169,110,0.55)" if not has_hydro else "rgba(46,204,133,0.55)"
+            hydro_dot_bg = "#c8a96e" if not has_hydro else "#2ecc85"
+            hydro_val_color = "#c8a96e" if not has_hydro else "#2ecc85"
+
+            # Geo label
+            geo_border = "rgba(200,169,110,0.55)" if not has_geo else "rgba(46,204,133,0.55)"
+            geo_dot_bg = "#c8a96e" if not has_geo else "#2ecc85"
+            geo_val_color = "#c8a96e" if not has_geo else "#2ecc85"
+
+            overlay_html = f"""
+            <div style="position:absolute;top:6%;left:2%;
+                        background:rgba(6,26,17,0.88);border:1px solid {hydro_border};
+                        border-radius:8px;padding:5px 10px;font-family:Inter,sans-serif;
+                        font-size:.76em;color:#f0ede8;backdrop-filter:blur(4px);
+                        box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;z-index:10;line-height:1.5;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                           background:{hydro_dot_bg};margin-right:4px;vertical-align:middle;"></span>
+              <span style="color:rgba(240,237,232,.45);">Hydro Turbine</span><br>
+              <span style="color:{hydro_val_color};font-weight:700;">{p_hydro_mw:.2f} MW</span>
+              <span style="color:rgba(240,237,232,.45);"> &middot; {flow_rate} m&sup3;/s &middot; {fall_height} m head</span>
+            </div>
+
+            <div style="position:absolute;bottom:20%;left:2%;
+                        background:rgba(6,26,17,0.88);border:1px solid {geo_border};
+                        border-radius:8px;padding:5px 10px;font-family:Inter,sans-serif;
+                        font-size:.76em;color:#f0ede8;backdrop-filter:blur(4px);
+                        box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;z-index:10;line-height:1.5;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                           background:{geo_dot_bg};margin-right:4px;vertical-align:middle;"></span>
+              <span style="color:rgba(240,237,232,.45);">Geothermal Well</span><br>
+              <span style="color:{geo_val_color};font-weight:700;">{p_geo_mw:.2f} MW</span>
+              <span style="color:rgba(240,237,232,.45);"> &middot; {geo_temp:.0f}&deg;C &middot; {depth_km} km &middot; {pipe_mat}</span>
+            </div>
+
+            <div style="position:absolute;top:6%;left:50%;transform:translateX(-50%);
+                        background:rgba(6,26,17,0.88);border:1px solid rgba(46,204,133,0.55);
+                        border-radius:8px;padding:5px 10px;font-family:Inter,sans-serif;
+                        font-size:.76em;color:#f0ede8;backdrop-filter:blur(4px);
+                        box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;z-index:10;line-height:1.5;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                           background:#2ecc85;margin-right:4px;vertical-align:middle;"></span>
+              <span style="color:rgba(240,237,232,.45);">ORC Recovery</span><br>
+              <span style="color:#2ecc85;font-weight:700;">+{p_orc_mw:.3f} MW</span>
+              <span style="color:rgba(240,237,232,.45);"> &middot; {e_orc_mwh:,.0f} MWh/yr captured</span>
+            </div>
+
+            <div style="position:absolute;top:6%;right:2%;
+                        background:rgba(6,26,17,0.88);border:1px solid rgba(46,204,133,0.55);
+                        border-radius:8px;padding:5px 10px;font-family:Inter,sans-serif;
+                        font-size:.76em;color:#f0ede8;backdrop-filter:blur(4px);
+                        box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;z-index:10;line-height:1.5;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                           background:#2ecc85;margin-right:4px;vertical-align:middle;"></span>
+              <span style="color:rgba(240,237,232,.45);">Grid Output</span><br>
+              <span style="color:#2ecc85;font-weight:700;">{p_total_mw:.2f} MW</span>
+              <span style="color:rgba(240,237,232,.45);"> total dispatched</span>
+            </div>
+
+            <div style="position:absolute;bottom:20%;right:2%;
+                        background:rgba(6,26,17,0.88);border:1px solid rgba(46,204,133,0.55);
+                        border-radius:8px;padding:5px 10px;font-family:Inter,sans-serif;
+                        font-size:.76em;color:#f0ede8;backdrop-filter:blur(4px);
+                        box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;z-index:10;line-height:1.5;">
+              <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+                           background:#2ecc85;margin-right:4px;vertical-align:middle;"></span>
+              <span style="color:rgba(240,237,232,.45);">Community &middot; {loc_name}</span><br>
+              <span style="color:#2ecc85;font-weight:700;">{households:,} homes powered</span><br>
+              <span style="color:rgba(240,237,232,.45);">{carbon_saved:,.0f} t CO&sup2;/yr avoided</span>
+            </div>
+            """
+        else:
+            overlay_html = """
+            <div style="position:absolute;inset:0;display:flex;align-items:center;
+                        justify-content:center;pointer-events:none;">
+              <div style="background:rgba(6,26,17,0.78);border:1px solid rgba(46,204,133,.25);
+                          border-radius:12px;padding:12px 28px;backdrop-filter:blur(4px);text-align:center;">
+                <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:.88em;
+                           color:rgba(240,237,232,.4);margin:0;">
+                  📊 Run the Geographic Calculator to activate live data overlays
+                </p>
+              </div>
+            </div>"""
+
+        # ── Render using components.html() — image constrained by height so it never clips ──
+        IMG_H = 560
+        IFRAME_H = IMG_H + 100
+
+        hw_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="utf-8"/>
+        <style>
+          * {{ margin:0; padding:0; box-sizing:border-box; }}
+          html, body {{ background:transparent; font-family:Inter,sans-serif; width:100%; }}
+          .wrap {{
+            background:rgba(10,35,25,.4);
+            border:1px solid rgba(46,204,133,.2);
+            border-radius:16px;
+            padding:16px;
+          }}
+          .img-container {{
+            position:relative;
+            height:{IMG_H}px;
+            display:flex;
+            justify-content:center;
+          }}
+          .img-container img {{
+            height:{IMG_H}px;
+            width:auto;
+            border-radius:10px;
+            display:block;
+          }}
+          .legend {{
+            display:flex; gap:14px; flex-wrap:wrap; margin-top:12px;
+          }}
+          .legend span {{
+            font-family:Inter,sans-serif; font-size:.78em;
+            color:rgba(240,237,232,.5); display:flex; align-items:center; gap:5px;
+          }}
+          .dot {{
+            display:inline-block; width:11px; height:11px;
+            border-radius:2px; flex-shrink:0;
+          }}
+          .caption {{
+            font-family:Inter,sans-serif; font-size:.73em;
+            color:rgba(240,237,232,.28); margin:8px 0 0;
+          }}
+          .hotspot {{
+            position:absolute;
+            cursor:pointer;
+            border-radius:8px;
+            transition: background 0.2s;
+          }}
+          .hotspot:hover {{
+            background:rgba(46,204,133,0.10);
+            outline: 2px solid rgba(46,204,133,0.4);
+          }}
+          .popup {{
+            display:none;
+            position:absolute;
+            top:50%; left:50%;
+            transform:translate(-50%,-50%);
+            background:rgba(6,26,17,0.97);
+            border:1px solid rgba(46,204,133,0.6);
+            border-radius:12px;
+            padding:16px 20px;
+            z-index:100;
+            min-width:250px;
+            max-width:300px;
+            box-shadow:0 8px 32px rgba(0,0,0,0.7);
+            font-family:Inter,sans-serif;
+          }}
+          .popup-title {{
+            font-family:'Plus Jakarta Sans',Inter,sans-serif;
+            font-size:.95em; font-weight:700; color:#f0ede8;
+            margin:0 0 6px; padding-right:20px;
+          }}
+          .popup-role {{
+            font-size:.7em; font-weight:600; text-transform:uppercase;
+            letter-spacing:.08em; margin:0 0 10px;
+          }}
+          .popup-stat {{
+            font-size:.8em; color:rgba(240,237,232,.6);
+            margin:4px 0; display:flex; justify-content:space-between;
+          }}
+          .popup-stat span {{ color:#2ecc85; font-weight:600; }}
+          .popup-close {{
+            position:absolute; top:8px; right:10px;
+            background:none; border:none;
+            color:rgba(240,237,232,.4); font-size:1em; cursor:pointer;
+          }}
+          .popup-close:hover {{ color:#f0ede8; }}
+          .hint {{
+            text-align:center; font-family:Inter,sans-serif;
+            font-size:.74em; color:rgba(240,237,232,.3);
+            margin-top:8px; letter-spacing:.03em;
+          }}
+        </style>
+        </head>
+        <body>
+          <div class="wrap">
+            <div class="img-container" id="imgContainer">
+              <img src="data:image/png;base64,{hw_img_b64}" alt="EcoGrid Hardware Prototype Diagram"/>
+              {overlay_html}
+
+              <div class="hotspot" style="top:2%;left:5%;width:38%;height:28%;"
+                   onclick="showInfo('hydro')"></div>
+              <div class="hotspot" style="top:35%;left:14%;width:16%;height:20%;"
+                   onclick="showInfo('geo')"></div>
+              <div class="hotspot" style="top:60%;left:8%;width:18%;height:22%;"
+                   onclick="showInfo('orc')"></div>
+              <div class="hotspot" style="top:40%;left:2%;width:13%;height:18%;"
+                   onclick="showInfo('grid')"></div>
+              <div class="hotspot" style="top:58%;left:37%;width:16%;height:30%;"
+                   onclick="showInfo('daylight')"></div>
+              <div class="hotspot" style="top:28%;left:52%;width:42%;height:20%;"
+                   onclick="showInfo('dashboard')"></div>
+              <div class="hotspot" style="top:48%;left:60%;width:34%;height:40%;"
+                   onclick="showInfo('residential')"></div>
+
+              <div class="popup" id="popup">
+                <button class="popup-close" onclick="closePopup()">✕</button>
+                <div id="popup-content"></div>
+              </div>
+            </div>
+            <p class="hint">💡 Click any component on the diagram to learn more</p>
+            <div class="legend">
+              <span><span class="dot" style="background:#3b82f6;"></span>Blue = Hydro Power</span>
+              <span><span class="dot" style="background:#f97316;"></span>Orange = Geothermal</span>
+              <span><span class="dot" style="background:#22c55e;"></span>Green = ORC Recovery</span>
+              <span><span class="dot" style="background:#eab308;"></span>Yellow = Main Grid</span>
+              <span><span class="dot" style="background:#ef4444;"></span>Red = Safety System</span>
+            </div>
+            <p class="caption">CAD model built in Autodesk Fusion 360 · Physical prototype by EcoGrid Team</p>
+          </div>
+
+          <script>
+            const DATA = {{
+              hydro: {{
+                title: "💧 Hydro System",
+                role: "Primary Generation",
+                color: "#3b82f6",
+                stats: [
+                  ["Power Output", "{p_hydro_mw:.2f} MW"],
+                  ["Flow Rate", "{flow_rate} m³/s"],
+                  ["Head Height", "{fall_height} m"],
+                  ["Status", "{('Active' if has_hydro else 'No data')}"]
+                ],
+                desc: "Waterfall-driven turbines convert kinetic energy of falling water into electricity continuously."
+              }},
+              geo: {{
+                title: "🌋 Geothermal Plant",
+                role: "Primary Generation",
+                color: "#f97316",
+                stats: [
+                  ["Power Output", "{p_geo_mw:.2f} MW"],
+                  ["Temperature", "{geo_temp:.0f}°C"],
+                  ["Depth", "{depth_km} km"],
+                  ["Pipe Material", "{pipe_mat}"]
+                ],
+                desc: "Extracts Earth's internal heat via deep wells. Runs 24/7 regardless of weather."
+              }},
+              orc: {{
+                title: "♻️ ORC Recovery",
+                role: "Waste Heat Capture",
+                color: "#22c55e",
+                stats: [
+                  ["Recovered", "{p_orc_mw:.3f} MW"],
+                  ["Annual Capture", "{e_orc_mwh:,.0f} MWh/yr"],
+                  ["Efficiency", "80% of waste heat"],
+                  ["Status", "Always ON"]
+                ],
+                desc: "Organic Rankine Cycle unit captures thermal losses from Hydro & Geothermal, converting them back into electricity."
+              }},
+              grid: {{
+                title: "⚡ Grid Control Center",
+                role: "Power Distribution",
+                color: "#eab308",
+                stats: [
+                  ["Total Routed", "{p_total_mw:.2f} MW"],
+                  ["Homes Powered", "{households:,}"],
+                  ["CO₂ Avoided", "{carbon_saved:,.0f} t/yr"],
+                  ["Location", "{loc_name}"]
+                ],
+                desc: "Central hub routing electricity from all sources to consumers. Manages load balancing and stability."
+              }},
+              daylight: {{
+                title: "☀️ Daylight Tower",
+                role: "Passive Energy Saving",
+                color: "#2ecc85",
+                stats: [
+                  ["Type", "Passive mirror system"],
+                  ["Function", "Sunlight redirection"],
+                  ["Benefit", "Cuts lighting demand"],
+                  ["Status", "Weather dependent"]
+                ],
+                desc: "Redirects natural sunlight into buildings, reducing artificial lighting load and overall electricity consumption."
+              }},
+              dashboard: {{
+                title: "📊 City Energy Dashboard",
+                role: "Monitoring & Display",
+                color: "#818cf8",
+                stats: [
+                  ["Tracks", "Real-time generation"],
+                  ["Alerts", "Anomaly detection"],
+                  ["Data", "Live kWh readings"],
+                  ["Link", "Tab 5 in app"]
+                ],
+                desc: "Displays real-time generation and consumption across the city grid so operators can track system health."
+              }},
+              residential: {{
+                title: "🏘️ Residential Area",
+                role: "Energy Consumer",
+                color: "#d97706",
+                stats: [
+                  ["Homes Powered", "{households:,}"],
+                  ["People Served", "{households * 4:,}"],
+                  ["Energy Source", "100% renewable"],
+                  ["Location", "{loc_name}"]
+                ],
+                desc: "End users receiving clean renewable electricity from the grid — homes and buildings in the community."
+              }}
+            }};
+
+            function showInfo(key) {{
+              const d = DATA[key];
+              if (!d) return;
+              let statsHtml = d.stats.map(([k, v]) =>
+                `<div class="popup-stat">${{k}}<span>${{v}}</span></div>`
+              ).join('');
+              document.getElementById('popup-content').innerHTML = `
+                <p class="popup-title">${{d.title}}</p>
+                <p class="popup-role" style="color:${{d.color}}">${{d.role}}</p>
+                ${{statsHtml}}
+                <p style="font-size:.75em;color:rgba(240,237,232,.4);margin-top:10px;line-height:1.5;">${{d.desc}}</p>
+              `;
+              document.getElementById('popup').style.display = 'block';
+            }}
+
+            function closePopup() {{
+              document.getElementById('popup').style.display = 'none';
+            }}
+
+            // Close popup if clicking outside
+            document.getElementById('imgContainer').addEventListener('click', function(e) {{
+              if (!e.target.classList.contains('hotspot') && e.target.id !== 'popup' && !e.target.closest('#popup')) {{
+                closePopup();
+              }}
+            }});
+          </script>
+        </body>
+        </html>
+        """
+
+        components.html(hw_html, height=IFRAME_H, scrolling=False)
+
+    else:
+        st.info("Place hardware_diagram.png in the same folder as app.py")
+
+    # ── Live summary metrics ──────────────────────────────────────────────────
+    if has_calc:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p class="sh" style="font-size:1.2em;">📡 Live Calculation Summary</p><div class="al"></div>', unsafe_allow_html=True)
+        m1, m2, m3, m4, m5 = st.columns(5)
+        m1.metric("Hydro Output",   f"{p_hydro_mw:.2f} MW",      delta="Active" if has_hydro else "No data")
+        m2.metric("Geo Output",     f"{p_geo_mw:.2f} MW",        delta="Active" if has_geo   else "No data")
+        m3.metric("ORC Recovered",  f"{p_orc_mw:.3f} MW",        delta="Always ON")
+        m4.metric("Total to Grid",  f"{p_total_mw:.2f} MW",      delta=f"{households:,} homes")
+        m5.metric("CO₂ Avoided",    f"{carbon_saved:,.0f} t/yr", delta="vs fossil fuel")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Component breakdown ───────────────────────────────────────────────────
+    st.markdown('<p class="sh">Component Breakdown</p><div class="al"></div>', unsafe_allow_html=True)
+
+    c1, c2 = st.columns(2)
+    with c1:
+        for name, colour, role, detail in [
+            ("💧 Hydro System",         "#3b82f6", "Primary Generation",    "Waterfall-driven turbines generate the bulk of electricity. Water flow rate and height determine output power."),
+            ("🌋 Geothermal Plant",      "#f97316", "Primary Generation",    "Extracts heat from deep underground. Temperature differential drives a generator via steam turbine."),
+            ("♻️ ORC Recovery",          "#22c55e", "Waste Heat Capture",    "Organic Rankine Cycle unit captures thermal losses from both Hydro and Geothermal that would otherwise be wasted, converting them back into electricity."),
         ]:
-            st.markdown(f'<div style="background:rgba(13,59,46,.28);border:1px solid rgba(46,204,133,.14);border-radius:10px;padding:11px 15px;margin-bottom:8px;"><p style="color:#f5f0e8;font-weight:600;margin:0 0 2px;font-size:.88em;">{n}</p><p style="color:rgba(245,240,232,.42);margin:0;font-size:.78em;">{d}</p></div>', unsafe_allow_html=True)
-    with hh2:
-        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;margin-bottom:11px;">📡 Data & Verification</p>', unsafe_allow_html=True)
-        for n, d in [
-            ("Calibration",   "Monthly zero-point & span vs. reference"),
-            ("Protocol",      "MQTT over TLS every 5 s"),
-            ("Quality control","3σ rejection + CRC checks"),
-            ("Certification", "IEC 62052 / ANSI C12.20"),
+            live = ""
+            if has_calc:
+                if "Hydro" in name and has_hydro:
+                    live = f' <span style="color:#2ecc85;font-size:.73em;">· {p_hydro_mw:.2f} MW · {flow_rate} m³/s · {fall_height} m</span>'
+                elif "Geo" in name and has_geo:
+                    live = f' <span style="color:#2ecc85;font-size:.73em;">· {p_geo_mw:.2f} MW · {geo_temp:.0f}°C · {depth_km} km</span>'
+                elif "ORC" in name and has_orc:
+                    live = f' <span style="color:#2ecc85;font-size:.73em;">· +{p_orc_mw:.3f} MW · {e_orc_mwh:,.0f} MWh/yr</span>'
+            st.markdown(f'''<div style="background:rgba(13,59,46,.25);border-left:3px solid {colour};border-radius:0 10px 10px 0;padding:13px 16px;margin-bottom:10px;">
+              <p style="color:#f5f0e8;font-weight:700;font-size:.9em;margin:0 0 2px;">{name}{live}</p>
+              <p style="color:{colour};font-size:.72em;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin:0 0 5px;">{role}</p>
+              <p style="color:rgba(245,240,232,.48);font-size:.8em;margin:0;line-height:1.6;">{detail}</p>
+            </div>''', unsafe_allow_html=True)
+    with c2:
+        for name, colour, role, detail in [
+            ("⚡ Grid Control Center",  "#eab308", "Power Distribution",    "The central hub that receives electricity from all sources and intelligently routes it to consumers and the city dashboard."),
+            ("📊 City Energy Dashboard","#818cf8", "Monitoring & Display",  "Displays real-time generation and consumption data across the city grid, enabling operators to track system health."),
+            ("🏘️ Residential Area",     "#d97706", "Energy Consumer",       "Represents the end users — homes and buildings that receive clean renewable electricity from the grid."),
+            ("☀️ Daylight Tower",        "#2ecc85", "Passive Energy Saving", "Mirrors and redirects natural sunlight into buildings, cutting artificial lighting demand and reducing overall electricity consumption."),
         ]:
-            st.markdown(f'<div style="background:rgba(13,59,46,.28);border:1px solid rgba(46,204,133,.14);border-radius:10px;padding:11px 15px;margin-bottom:8px;"><p style="color:#f5f0e8;font-weight:600;margin:0 0 2px;font-size:.88em;">{n}</p><p style="color:rgba(245,240,232,.42);margin:0;font-size:.78em;">{d}</p></div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<p class="sh">Setup Guide</p><div class="al"></div>', unsafe_allow_html=True)
-    for i, (title, d) in enumerate([
-        ("Wire sensors",         "Connect CTs around each phase conductor. Use shielded cable for runs > 1 m."),
-        ("Flash firmware",       "Upload Arduino/ESP32 sketch. Set Wi-Fi SSID & MQTT broker in config.h."),
-        ("Calibrate",            "Apply 1 kW reference load; adjust CT_RATIO until reading matches."),
-        ("Verify transmission",  "Check MQTT dashboard — payloads every 5 s, CRC pass > 99.9%."),
-        ("Connect to EcoGrid",   "Enter broker URL in Household Energy Status tab. Data flows automatically."),
-    ], 1):
-        st.markdown(f'<div class="sr"><div class="snum">{i}</div><div class="sbody"><h4>{title}</h4><p>{d}</p></div></div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    hw1, hw2 = st.columns(2)
-    for col, lbl in zip([hw1, hw2], ["Wiring Diagram", "Installed Unit Photo"]):
-        col.markdown(f'<div style="border:2px dashed rgba(46,204,133,.25);border-radius:12px;padding:50px 14px;text-align:center;background:rgba(13,59,46,.16);"><p style="color:rgba(245,240,232,.35);font-size:.93em;margin:0;">📷 {lbl}</p></div>', unsafe_allow_html=True)
+            live = ""
+            if has_calc:
+                if "Grid Control" in name:
+                    live = f' <span style="color:#2ecc85;font-size:.73em;">· {p_total_mw:.2f} MW routed</span>'
+                elif "Residential" in name:
+                    live = f' <span style="color:#2ecc85;font-size:.73em;">· {households:,} homes · {loc_name}</span>'
+            st.markdown(f'''<div style="background:rgba(13,59,46,.25);border-left:3px solid {colour};border-radius:0 10px 10px 0;padding:13px 16px;margin-bottom:10px;">
+              <p style="color:#f5f0e8;font-weight:700;font-size:.9em;margin:0 0 2px;">{name}{live}</p>
+              <p style="color:{colour};font-size:.72em;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin:0 0 5px;">{role}</p>
+              <p style="color:rgba(245,240,232,.48);font-size:.8em;margin:0;line-height:1.6;">{detail}</p>
+            </div>''', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -628,8 +1046,6 @@ with t4:
 # ══════════════════════════════════════════════════════════════════════════════
 with t5:
     st.markdown('<p class="sh">Household Energy Status</p><div class="al"></div><p class="ss">EnergyGuard AI · Keen Edition V4 · Real-time monitoring & optimisation</p>', unsafe_allow_html=True)
-
-    # ── Helper classes & functions ────────────────────────────────────────────
 
     class EnergyRecord:
         def __init__(self, u, e, s, t, sl, tmp):
@@ -689,7 +1105,6 @@ with t5:
 
         return reasons, actions, min(100, conf)
 
-    # ── Form ─────────────────────────────────────────────────────────────────
     with st.form("hh_energy_form"):
         st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f5f0e8;font-size:.94em;margin-bottom:13px;">📊 Enter Energy Reading</p>', unsafe_allow_html=True)
         fi1, fi2 = st.columns(2)
@@ -703,7 +1118,6 @@ with t5:
             temp_v = st.number_input("Temperature (°C)", step=0.1, value=25.0)
         sub = st.form_submit_button("🔍 Analyse Energy", use_container_width=True)
 
-    # ── Results ───────────────────────────────────────────────────────────────
     if sub:
         rec_obj = EnergyRecord(usage_v, expected_v, sector_v, tod_v, sun_v, temp_v)
         rt  = eg_ratio(rec_obj)
