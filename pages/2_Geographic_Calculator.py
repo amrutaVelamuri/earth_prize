@@ -1665,14 +1665,14 @@ with tab1:
             base_waste_sources = 0
             
             if has_waterfall:
-                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.30
+                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.15
                 base_waste_sources += waterfall_waste
             
             if has_geothermal:
                 geothermal_waste = E_geo_year_MWh * 1000 * 0.30
                 base_waste_sources += geothermal_waste
             
-            waste_recovered_kWh = base_waste_sources * 0.80
+            waste_recovered_kWh = base_waste_sources * 0.12 
             waste_remaining_kWh = base_waste_sources * 0.20
             
             E_waste_recovered_MWh = waste_recovered_kWh / 1000
@@ -1683,10 +1683,13 @@ with tab1:
             # TOTALS
             P_total_MW = P_waterfall_MW + P_geo_MW
             E_total_year_MWh = E_waterfall_year_MWh + E_geo_year_MWh + E_waste_recovered_MWh
-            households_total = int(E_total_year_MWh * 1000 / 7.2)
+            households_total = int(E_total_year_MWh * 1000 / rdata['households_kwh_year'])
+
             
             # CARBON EMISSIONS CALCULATIONS
-            carbon_factor = CARBON_FACTORS['grid_average_bangladesh']
+            detected_region = auto_detect_region(latitude, longitude)
+            rdata = REGIONAL_DATA[detected_region]
+            carbon_factor = rdata['carbon_factor']
             carbon_saved_tons = E_total_year_MWh * carbon_factor
             
             SO2_saved = E_total_year_MWh * OTHER_EMISSIONS['SO2']
