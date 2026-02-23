@@ -9,6 +9,15 @@ from datetime import datetime
 import json
 
 # Carbon Emission Factors (Bangladesh specific - Source: BPDB & IEA)
+REGIONAL_DATA = {
+    "🇧🇩 Bangladesh (Asia)":      {"carbon_factor": 0.62, "default_lat": 23.8103, "default_lng": 90.4125, "households_kwh_year": 7.2, "notes": "High fossil fuel dependency, expanding renewables"},
+    "🇰🇪 Kenya (Africa)":          {"carbon_factor": 0.37, "default_lat": -1.2921, "default_lng": 36.8219, "households_kwh_year": 5.8, "notes": "47% renewable grid — strong geothermal base"},
+    "🇧🇷 Brazil (South America)":  {"carbon_factor": 0.22, "default_lat": -14.235, "default_lng": -51.925, "households_kwh_year": 6.5, "notes": "Dominated by hydroelectric — one of the cleanest large grids"},
+    "🇮🇸 Iceland (Europe)":        {"carbon_factor": 0.03, "default_lat": 64.9631, "default_lng": -19.020, "households_kwh_year": 9.1, "notes": "Near 100% renewable — world leader in geothermal"},
+    "🇨🇦 Canada (North America)":  {"carbon_factor": 0.15, "default_lat": 56.1304, "default_lng": -106.34, "households_kwh_year": 8.9, "notes": "60% hydroelectric — very low emission grid"},
+    "🇳🇿 New Zealand (Oceania)":   {"carbon_factor": 0.15, "default_lat": -40.900, "default_lng": 174.886, "households_kwh_year": 7.8, "notes": "85% renewable — strong geothermal and hydro mix"},
+}
+
 CARBON_FACTORS = {
     'coal': 1.05,
     'natural_gas': 0.45,
@@ -24,6 +33,16 @@ OTHER_EMISSIONS = {
     'CH4': 0.03,
     'mercury': 0.00001
 }
+
+def auto_detect_region(lat, lng):
+    closest = None
+    min_dist = float('inf')
+    for region_name, region_info in REGIONAL_DATA.items():
+        dist = ((lat - region_info['default_lat'])**2 + (lng - region_info['default_lng'])**2) ** 0.5
+        if dist < min_dist:
+            min_dist = dist
+            closest = region_name
+    return closest
 
 # ============================================================================
 # AI REPORT GENERATION FUNCTION
@@ -1665,14 +1684,14 @@ with tab1:
             base_waste_sources = 0
             
             if has_waterfall:
-                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.15
+                waterfall_waste = E_waterfall_year_MWh * 1000 * 0.30
                 base_waste_sources += waterfall_waste
             
             if has_geothermal:
                 geothermal_waste = E_geo_year_MWh * 1000 * 0.30
                 base_waste_sources += geothermal_waste
             
-            waste_recovered_kWh = base_waste_sources * 0.12 
+            waste_recovered_kWh = base_waste_sources * 0.80
             waste_remaining_kWh = base_waste_sources * 0.20
             
             E_waste_recovered_MWh = waste_recovered_kWh / 1000
@@ -1683,13 +1702,13 @@ with tab1:
             # TOTALS
             P_total_MW = P_waterfall_MW + P_geo_MW
             E_total_year_MWh = E_waterfall_year_MWh + E_geo_year_MWh + E_waste_recovered_MWh
-            households_total = int(E_total_year_MWh * 1000 / rdata['households_kwh_year'])
-
-            
-            # CARBON EMISSIONS CALCULATIONS
+# Auto-detect region from coordinates
             detected_region = auto_detect_region(latitude, longitude)
             rdata = REGIONAL_DATA[detected_region]
             carbon_factor = rdata['carbon_factor']
+            households_total = int(E_total_year_MWh * 1000 / rdata['households_kwh_year'])
+
+            # CARBON EMISSIONS CALCULATIONS
             carbon_saved_tons = E_total_year_MWh * carbon_factor
             
             SO2_saved = E_total_year_MWh * OTHER_EMISSIONS['SO2']
@@ -1734,7 +1753,9 @@ with tab1:
                 'trees_equivalent': trees_equivalent,
                 'cars_off_road': cars_off_road,
                 'coal_avoided_tons': coal_avoided_tons,
-                'gas_avoided_tons': gas_avoided_tons
+                'gas_avoided_tons': gas_avoided_tons,
+                'selected_region': detected_region,
+                'carbon_factor': carbon_factor
             }
             
             st.session_state.predictions['waterfall_mw'] = P_waterfall_MW
@@ -2831,10 +2852,12 @@ with tab6:
                         e_waste_recovered = (total_waste * 0.80) / 1000
                         
                         total_annual = e_waterfall + e_geo + e_waste_recovered
-                        households = int(total_annual * 1000 / 7.2)
                         
                         # Carbon calculations
-                        carbon_saved = total_annual * CARBON_FACTORS['grid_average_bangladesh']
+                        detected_region = auto_detect_region(lat, lng)
+                        reg = REGIONAL_DATA[detected_region]
+                        households = int(total_annual * 1000 / reg['households_kwh_year'])
+                        carbon_saved = total_annual * reg['carbon_factor']
                         
                         if temp < 300:
                             material = "Stainless Steel"
