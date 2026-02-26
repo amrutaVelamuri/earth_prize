@@ -1304,14 +1304,15 @@ with t5:
 with t6:
     st.markdown('<p class="sh">Green Energy Systems: Detailed Design</p><div class="al"></div><p class="ss">The science, engineering, and AI integration behind each of the four EcoGrid technologies</p>', unsafe_allow_html=True)
 
-    sys_tab1, sys_tab2, sys_tab3, sys_tab4, sys_tab5, sys_tab6 = st.tabs([
-        "🌋 Geothermal",
-        "💧 Waterfall Turbines",
-        "♻️ Waste Recovery",
-        "☀️ Daylight Mirroring",
-        "🏭 Integrated Center",
-        "🌍 SDG Alignment",
-    ])
+    sys_tab1, sys_tab2, sys_tab3, sys_tab4, sys_tab5, sys_tab6, sys_tab7 = st.tabs([
+    "🌋 Geothermal",
+    "💧 Waterfall Turbines",
+    "♻️ Waste Recovery",
+    "☀️ Daylight Mirroring",
+    "🏭 Integrated Center",
+    "🌍 SDG Alignment",
+    "📊 Comparisons",
+])
 
     # ── GEOTHERMAL ────────────────────────────────────────────────────────────
     with sys_tab1:
@@ -1910,7 +1911,7 @@ with t6:
                     color:#f0ede8;font-size:1em;margin:0 0 6px;">Want to go deeper?</p>
           <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.45);
                     font-size:.82em;margin:0 0 16px;">
-            Download the full 31-page technical design document covering every system in detail.
+            Download the full 32-page technical design document covering every system in detail.
           </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1927,7 +1928,217 @@ with t6:
             )
         else:
             st.warning("Place EcoGrid_Science_and_Systems.pdf in the same folder as app.py to enable download.")
+# ── COMPARISONS ───────────────────────────────────────────────────────────
+    with sys_tab7:
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#2ecc85;font-size:1.05em;margin:0 0 8px;">Why Our Systems Are Better</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            Traditional geothermal and hydropower plants have powered the world for decades —
+            but they come with significant limitations. This comparison shows how EcoGrid's
+            AI-integrated designs outperform conventional approaches across efficiency,
+            environmental impact, safety, and adaptability.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
 
+        # ── GEOTHERMAL COMPARISON ─────────────────────────────────────────────
+        st.markdown('<p class="sh" style="font-size:1.3em;">🌋 Geothermal: Traditional vs EcoGrid</p><div class="al"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="ib" style="margin-bottom:18px;">
+          Traditional geothermal plants operate in countries like Iceland, Japan, Kenya, and the US —
+          with plants like Hatchōbaru (~112 MW, ~3000 m deep) and Reykjanes (~130 MW, ~2700 m deep).
+          Our system goes deeper, smarter, and integrates recovery systems that conventional plants discard.
+        </div>
+        """, unsafe_allow_html=True)
+
+        geo_compare = pd.DataFrame({
+            "Feature": [
+                "Heat Source Depth",
+                "Technology / Fluid Loop",
+                "Pipe & Material",
+                "Monitoring & Control",
+                "Integration",
+                "Environmental Impact",
+                "Efficiency",
+                "Reliability",
+                "Safety & Maintenance",
+                "Example Output",
+            ],
+            "Traditional Plant": [
+                "1–3 km; shallow reservoirs",
+                "Single-loop; underground water flows directly to turbines",
+                "Standard steel; prone to corrosion",
+                "Human inspections at intervals",
+                "Standalone; no energy recovery",
+                "Possible groundwater contamination & surface disruption",
+                "~10–23% conversion efficiency; heat often wasted",
+                "Fixed operation; human-controlled; limited seasonal adaptation",
+                "Reactive human inspection; delayed response",
+                "~2–5 MW per well (shallow reservoirs)",
+            ],
+            "EcoGrid System": [
+                "3–10 km; hot dry rock, 150–900°C",
+                "Dual-loop: primary downhole absorbs heat, secondary drives turbines",
+                "Inconel, titanium alloys, ceramic composites",
+                "AI + human supervision, real-time monitoring, predictive maintenance",
+                "Integrated with waste recovery and national grid storage",
+                "Closed-loop reinjection; AI monitors reservoir pressure & flow",
+                "20–25% geothermal + additional recovered energy from waste",
+                "AI adapts flow rates, turbine operation, and integration dynamically",
+                "AI-driven predictive maintenance, real-time fault detection, emergency shutdowns",
+                "~5–10 MW per well + additional recovered energy",
+            ],
+            "Why EcoGrid Wins": [
+                "Deeper = higher & more consistent heat → more continuous output",
+                "Prevents contamination, scaling, protects turbines, improves efficiency",
+                "Handles extreme temps & pressure; longer lifespan, less maintenance",
+                "Continuous optimisation, faster response, fewer failures",
+                "Maximises usable energy, balances supply & demand automatically",
+                "Minimal invasion, protects underground reservoirs, sustainable long-term",
+                "Higher net output; converts otherwise lost energy; minimises waste",
+                "Continuous optimised output; adjusts to demand, season, reservoir changes",
+                "Prevents accidents, reduces costs, enables remote supervision",
+                "More electricity per site; integration increases total net output",
+            ],
+        })
+        st.dataframe(geo_compare, use_container_width=True, hide_index=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(249,115,22,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">Traditional efficiency</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.6em;font-weight:700;color:#f97316;margin:0;">10–23%</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">energy conversion</p>
+            </div>""", unsafe_allow_html=True)
+        with c2:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(46,204,133,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">EcoGrid efficiency</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.6em;font-weight:700;color:#2ecc85;margin:0;">20–25%+</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">plus recovered waste</p>
+            </div>""", unsafe_allow_html=True)
+        with c3:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(46,204,133,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">Output per well</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.6em;font-weight:700;color:#2ecc85;margin:0;">5–10 MW</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">vs 2–5 MW traditional</p>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown("<br><br>", unsafe_allow_html=True)
+
+        # ── WATERFALL COMPARISON ──────────────────────────────────────────────
+        st.markdown('<p class="sh" style="font-size:1.3em;">💧 Waterfall Turbines: Traditional vs EcoGrid</p><div class="al"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="ib" style="margin-bottom:18px;">
+          Traditional dam-based hydropower achieves 85–95% turbine efficiency — impressive, but at massive
+          ecological and social cost. Our mountain-attached system achieves 85–90% efficiency
+          <em>without</em> a single dam, reservoir, or diverted river.
+        </div>
+        """, unsafe_allow_html=True)
+
+        hydro_compare = pd.DataFrame({
+            "Feature": [
+                "Water Source",
+                "Environmental Impact",
+                "Turbine Design",
+                "Efficiency",
+                "Flow Adaptability",
+                "Monitoring",
+                "Energy Output Example",
+                "Safety",
+                "Grid Integration",
+                "Construction Footprint",
+            ],
+            "Traditional Dam Hydro": [
+                "Large rivers; requires damming or diverting water",
+                "Blocks fish migration, alters ecosystems, floods land",
+                "Fixed blades, large and stationary",
+                "~70–85% under optimal conditions",
+                "Low; turbines can't dynamically adjust to flow changes",
+                "Periodic human inspection; reactive maintenance",
+                "Medium-sized dam: ~50 MW (large river)",
+                "Dams can fail under extreme weather; human-dependent checks",
+                "Usually standalone or connected to a central grid",
+                "Large-scale dams, major environmental footprint",
+            ],
+            "EcoGrid Waterfall System": [
+                "Directly attached to mountain waterfalls; no diversion",
+                "No water diversion; AI-monitored turbines adapt to flow",
+                "Adjustable AI-controlled blades, adaptive to flow",
+                "85–90% with AI optimisation",
+                "High; AI adjusts blade angles instantly based on flow & rainfall",
+                "AI + human supervision; predictive maintenance; real-time monitoring",
+                "50 m waterfall, 10 m³/s: ~4.41 MW; scalable with multiple turbines",
+                "AI monitors vibration, debris, rainfall; emergency stop activation",
+                "Integrated with AI-controlled geothermal & waste recovery",
+                "Small footprint; mounts on existing waterfalls with rock anchors",
+            ],
+            "Why EcoGrid Wins": [
+                "Zero ecological disruption; preserves river ecosystems entirely",
+                "Protects biodiversity, prevents flooding, minimal habitat disruption",
+                "Maximises capture under varying flow; reduces wear",
+                "AI sustains higher efficiency under real-world variable conditions",
+                "Maintains peak efficiency regardless of seasonal changes",
+                "Detects wear, corrosion, vibrations proactively; reduces downtime",
+                "Modular design allows multiple installations across many sites",
+                "Proactively prevents accidents, safe even under sudden floods",
+                "Balances output across multiple sources; optimises whole ecosystem",
+                "Environmentally friendly, low-cost, deployable in remote areas",
+            ],
+        })
+        st.dataframe(hydro_compare, use_container_width=True, hide_index=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(59,130,246,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">Run-of-river / micro hydro</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.6em;font-weight:700;color:#3b82f6;margin:0;">70–90%</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">typical small hydro efficiency</p>
+            </div>""", unsafe_allow_html=True)
+        with c2:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(46,204,133,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">EcoGrid AI-optimised</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.6em;font-weight:700;color:#2ecc85;margin:0;">85–90%</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">sustained efficiency</p>
+            </div>""", unsafe_allow_html=True)
+        with c3:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(46,204,133,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">Example output</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.6em;font-weight:700;color:#2ecc85;margin:0;">4.41 MW</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">50 m head · 10 m³/s · no dam</p>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.2);
+                    border-radius:10px;padding:14px 18px;margin-top:20px;">
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);font-size:.82em;margin:0;line-height:1.7;">
+            <strong style="color:#2ecc85;">The bottom line:</strong> Traditional dam projects displace communities,
+            flood ecosystems, and take 5–10 years to build. EcoGrid waterfall turbines are operational
+            in 18–24 months, require no land flooding, and can be fully removed at end of life —
+            leaving the site in its natural state. Modular deployment across dozens of sites can
+            match or exceed the output of a single large dam with a fraction of the ecological cost.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
 # ══════════════════════════════════════════════════════════════════════════════
