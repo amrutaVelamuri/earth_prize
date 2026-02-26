@@ -1931,4 +1931,4 @@ with t6:
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<div class="footer"><strong style="color:#2ecc85;">EcoGrid Toolkit</strong><br>Empowering communities with clean energy solutions · © 2024 EcoGrid Toolkit · Built with Streamlit</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer"><strong style="color:#2ecc85;">EcoGrid Toolkit</strong><br>Empowering communities with clean energy solutions · © 2026 EcoGrid Toolkit · Built with Streamlit</div>', unsafe_allow_html=True)
