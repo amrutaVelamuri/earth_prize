@@ -1390,6 +1390,9 @@ with tab1:
             st.success(f"Using map location: {st.session_state.geo_data['clicked_lat']:.4f}, {st.session_state.geo_data['clicked_lng']:.4f}")
             initial_latitude = float(st.session_state.geo_data['clicked_lat'])
             initial_longitude = float(st.session_state.geo_data['clicked_lng'])
+            # Always force-sync form values to the latest clicked coordinates
+            st.session_state.form_latitude = initial_latitude
+            st.session_state.form_longitude = initial_longitude
         else:
             st.info("Go to the 'Enhanced Map View' tab to click on a location first.")
             initial_latitude = 23.8103
@@ -1434,10 +1437,7 @@ with tab1:
     if 'form_depth' not in st.session_state:
         st.session_state.form_depth = initial_depth
     
-    # Update coordinates when input method changes to "Click on Map"
-    if input_method == "Click on Map" and 'clicked_lat' in st.session_state.geo_data:
-        st.session_state.form_latitude = float(st.session_state.geo_data['clicked_lat'])
-        st.session_state.form_longitude = float(st.session_state.geo_data['clicked_lng'])
+    
     
     # Update ALL values when input method changes to "Use PDF Data"
     if input_method == "Use PDF Data" and st.session_state.pdf_extracted:
