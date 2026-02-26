@@ -1886,7 +1886,8 @@ with t6:
             """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div style="background:rgba(46,204,133,.08);border:1px solid rgba(46,204,133,.25);
+        <div style="background:
+        rgba(46,204,133,.08);border:1px solid rgba(46,204,133,.25);
                     border-radius:14px;padding:20px 24px;margin-top:8px;text-align:center;">
           <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
                     color:#2ecc85;font-size:1em;margin:0 0 8px;">The Bottom Line</p>
@@ -1899,6 +1900,33 @@ with t6:
           </p>
         </div>
         """, unsafe_allow_html=True)
+        # ── PDF DOWNLOAD ──────────────────────────────────────────────────────
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="background:rgba(13,59,46,.4);border:1px solid rgba(46,204,133,.25);
+                    border-radius:14px;padding:24px;text-align:center;">
+          <p style="font-size:1.8em;margin-bottom:8px;">📄</p>
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#f0ede8;font-size:1em;margin:0 0 6px;">Want to go deeper?</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.45);
+                    font-size:.82em;margin:0 0 16px;">
+            Download the full 32-page technical design document covering every system in detail.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        design_pdf_b64 = load_file_b64("EcoGrid_Science_and_Systems.pdf")
+        if design_pdf_b64:
+            pdf_bytes = base64.b64decode(design_pdf_b64)
+            st.download_button(
+                label="⬇️  Download Full System Design PDF",
+                data=pdf_bytes,
+                file_name="EcoGrid_Green_Energy_Systems_Design.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        else:
+            st.warning("Place EcoGrid_Science_and_Systems.pdf in the same folder as app.py to enable download.")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
