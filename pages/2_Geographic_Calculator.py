@@ -1393,7 +1393,10 @@ with tab1:
             # Always force-sync form values to the latest clicked coordinates
             st.session_state.form_latitude = initial_latitude
             st.session_state.form_longitude = initial_longitude
-        else:
+            # Delete cached widget state so number_input re-renders with new value
+            for key in ['latitude_input', 'longitude_input']:
+                if key in st.session_state:
+                    del st.session_state[key]
             st.info("Go to the 'Enhanced Map View' tab to click on a location first.")
             initial_latitude = 23.8103
             initial_longitude = 90.4125
