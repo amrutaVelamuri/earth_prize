@@ -275,14 +275,14 @@ else:
 # ============================================================================
 # MAIN TABS
 # ============================================================================
-t1, t2, t3, t4, t5 = st.tabs([
+t1, t2, t3, t4, t5, t6 = st.tabs([
     "👥  Introduction",
     "📚  About & Education",
     "📊  Data & Calculation",
     "🔌  Verification Unit",
     "🏠  Household Energy Status",
+    "🔬  System Design",
 ])
-
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — INTRODUCTION
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1298,7 +1298,607 @@ with t5:
                 'Recovered': h['recovered_log'],
                 'Wasted':    h['remaining_log'],
             }).tail(10), use_container_width=True)
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 6 — SYSTEM DESIGN
+# ══════════════════════════════════════════════════════════════════════════════
+with t6:
+    st.markdown('<p class="sh">Green Energy Systems: Detailed Design</p><div class="al"></div><p class="ss">The science, engineering, and AI integration behind each of the four EcoGrid technologies</p>', unsafe_allow_html=True)
 
+    sys_tab1, sys_tab2, sys_tab3, sys_tab4, sys_tab5, sys_tab6 = st.tabs([
+        "🌋 Geothermal",
+        "💧 Waterfall Turbines",
+        "♻️ Waste Recovery",
+        "☀️ Daylight Mirroring",
+        "🏭 Integrated Center",
+        "🌍 SDG Alignment",
+    ])
+
+    # ── GEOTHERMAL ────────────────────────────────────────────────────────────
+    with sys_tab1:
+        st.markdown("""
+        <div style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#f97316;font-size:1.05em;margin:0 0 8px;">Core Concept</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            Deep boreholes 3–10 km into the Earth reach hot dry rock zones where temperatures 
+            range from 150°C to 900°C. A dual-loop heat transfer system extracts this energy 
+            continuously — day and night, regardless of weather — and converts it to electricity 
+            via a turbine-generator. AI monitors every stage in real time.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.95em;margin-bottom:12px;">⚙️ System Steps</p>', unsafe_allow_html=True)
+
+        steps = [
+            ("01", "Deep Borehole Drilling", "Boreholes reach hot dry rock zones or underground reservoirs. Pipe material is selected based on temperature to minimise heat loss and prevent failure. AI monitors temperature, pressure, and stress continuously, predicting failures before they occur."),
+            ("02", "Heat Transfer Loop — Primary (Downhole Circuit)", "Cold water or specialised working fluid (CO₂ or ammonia-water mixtures) is injected down the borehole. As it travels through hot rocks it absorbs heat and rises as superheated fluid or steam through the production well."),
+            ("03", "Heat Transfer Loop — Secondary (Surface Plant Circuit)", "Superheated fluid passes through a heat exchanger, transferring energy to a secondary closed-loop working fluid that boils at a lower temperature, creating high-pressure steam. This dual-loop design prevents contamination and mineral scaling by keeping underground water separate from the turbine system."),
+            ("04", "Steam to Electricity", "High-pressure steam drives a turbine-generator converting heat → mechanical energy → electricity. AI-controlled valves continuously adjust flow to maintain optimal turbine efficiency and match geothermal output with waste recovery, storage, and national grid demands."),
+            ("05", "Re-Injection", "Cooled water is pumped back underground, maintaining reservoir pressure and preserving the resource so the system can run sustainably for decades."),
+            ("06", "AI Integration", "AI optimises temperature, pressure, and fluid flow; monitors pipe stress and predicts replacements; balances energy demand matching across systems; activates automatic shutoff valves and fail-safes for overheating, leaks, or earthquakes."),
+        ]
+
+        for num, title, desc in steps:
+            st.markdown(f"""
+            <div style="display:flex;gap:14px;align-items:flex-start;
+                        background:rgba(13,59,46,.25);border:1px solid rgba(249,115,22,.12);
+                        border-radius:12px;padding:14px 18px;margin-bottom:10px;">
+              <div style="background:#f97316;color:#061a11;width:28px;height:28px;min-width:28px;
+                          border-radius:50%;display:flex;align-items:center;justify-content:center;
+                          font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.8em;">
+                {num}
+              </div>
+              <div>
+                <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                          color:#f0ede8;font-size:.88em;margin:0 0 4px;">{title}</p>
+                <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.5);
+                          font-size:.8em;margin:0;line-height:1.6;">{desc}</p>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.95em;margin-bottom:12px;">🌡️ Pipe Material by Temperature</p>', unsafe_allow_html=True)
+
+        import pandas as pd
+        pipe_df = pd.DataFrame({
+            "Temperature Range": ["150–300°C", "300–600°C", "600–900°C"],
+            "Material": ["Stainless Steel / Incoloy", "Inconel / Nickel-Chromium Composites", "Ceramic Composites / SiC / Titanium Alloys"],
+            "Specification": ["Durable and corrosion-resistant", "High thermal and mechanical stability", "Resistant to extreme heat and pressure"],
+        })
+        st.dataframe(pipe_df, use_container_width=True, hide_index=True)
+
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.2);
+                    border-radius:10px;padding:14px 18px;margin-top:16px;">
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);font-size:.82em;margin:0;line-height:1.7;">
+            <strong style="color:#2ecc85;">Why it matters:</strong> Wrong pipe material at high temperatures 
+            causes rapid corrosion and catastrophic failure within months. The correct material — automatically 
+            recommended by the EcoGrid calculator — signals engineering credibility to development banks and 
+            climate finance institutions reviewing funding applications.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── WATERFALL TURBINES ────────────────────────────────────────────────────
+    with sys_tab2:
+        st.markdown("""
+        <div style="background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#3b82f6;font-size:1.05em;margin:0 0 8px;">Core Concept</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            Turbines attach directly to mountain slopes at the base of natural waterfalls — no dam, 
+            no reservoir, no river diversion. AI-controlled adjustable blades continuously optimise 
+            energy capture as flow varies across seasons. Water passes through and returns to the 
+            river immediately downstream, leaving the ecosystem intact.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">📐 Power Formula</p>', unsafe_allow_html=True)
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(59,130,246,.2);
+                        border-radius:12px;padding:18px;text-align:center;">
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.3em;
+                        font-weight:700;color:#3b82f6;margin:0 0 12px;">P = ρ · g · Q · H · η</p>
+              <div style="font-family:Inter,sans-serif;font-size:.78em;color:rgba(240,237,232,.5);text-align:left;">
+                <p style="margin:3px 0;">ρ = 1000 kg/m³ — water density</p>
+                <p style="margin:3px 0;">g = 9.81 m/s²</p>
+                <p style="margin:3px 0;">Q = flow rate (m³/s)</p>
+                <p style="margin:3px 0;">H = waterfall height (m)</p>
+                <p style="margin:3px 0;">η = turbine + generator efficiency</p>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">📊 Example Calculation</p>', unsafe_allow_html=True)
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(59,130,246,.2);
+                        border-radius:12px;padding:18px;">
+              <p style="font-family:Inter,sans-serif;font-size:.8em;color:rgba(240,237,232,.4);margin:0 0 10px;">
+                Q = 10 m³/s · H = 50 m · η = 0.9
+              </p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.15em;
+                        font-weight:700;color:#2ecc85;margin:0 0 5px;">P ≈ 4.41 MW</p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05em;
+                        font-weight:700;color:#2ecc85;margin:0 0 5px;">38,630 MWh/year</p>
+              <p style="font-family:Inter,sans-serif;font-size:.78em;
+                        color:rgba(240,237,232,.4);margin:0;">≈ 5,370 families powered annually</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🔧 Component Materials</p>', unsafe_allow_html=True)
+
+        materials_df = pd.DataFrame({
+            "Component": ["Turbine Blades", "Turbine Housing", "Sensor Casings", "Mounting Anchors"],
+            "Material / Specification": [
+                "Stainless steel, Inconel, coated alloys",
+                "Reinforced steel with anti-corrosion coating",
+                "Waterproof polymer / stainless steel",
+                "Rock anchors / concrete and steel foundations",
+            ],
+            "Efficiency Advantage": [
+                "Minimal wear, high energy capture",
+                "Reduces mechanical losses",
+                "Reliable, continuous monitoring",
+                "Stable energy conversion",
+            ],
+        })
+        st.dataframe(materials_df, use_container_width=True, hide_index=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🤖 AI Functions</p>', unsafe_allow_html=True)
+
+        ai_funcs = [
+            ("Real-Time Flow Analysis", "Ultrasonic and pitot sensors feed live data. AI calculates optimal blade pitch for maximum energy capture at any flow rate."),
+            ("Predictive Maintenance", "Monitors wear, vibration, and corrosion trends. Predicts blade, bearing, and housing replacements before failures occur, saving costs and reducing downtime."),
+            ("Adaptive Efficiency", "Continuously adjusts blade angles and generator load to maintain peak output as waterfall conditions change — even during floods or low flow."),
+            ("Safety Monitoring", "Tracks rainfall, debris flow, and vibration. Activates emergency stops automatically if dangerous conditions are detected. Acts instantly to override delays."),
+            ("Remote Operations", "Engineers receive real-time AI diagnostics and recommendations, enabling safe adjustments from anywhere in the world. Guides robotic or rope-based maintenance interventions."),
+        ]
+
+        for title, desc in ai_funcs:
+            st.markdown(f"""
+            <div class="ib" style="margin-bottom:8px;">
+              <strong style="color:#3b82f6;">{title}:</strong> {desc}
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">⚠️ Technical Challenges & AI Solutions</p>', unsafe_allow_html=True)
+
+        challenges_df = pd.DataFrame({
+            "Challenge": [
+                "Structural anchoring",
+                "Corrosion & wear",
+                "Flow variability",
+                "Sensing & communication",
+                "Control latency & safety",
+                "Maintenance access",
+            ],
+            "AI-Integrated Solution": [
+                "AI monitors stress and load on anchors; alerts for reinforcement before failure",
+                "Predictive AI schedules modular blade replacement before failures occur",
+                "AI adjusts blade angles in real time for optimum capture under any conditions",
+                "AI integrates data from ultrasonic/pitot sensors, solar-powered IoT devices, LoRa/satellite",
+                "AI acts instantly, overriding latency delays to prevent accidents",
+                "AI predicts maintenance needs and guides robotic or rope-based interventions remotely",
+            ],
+        })
+        st.dataframe(challenges_df, use_container_width=True, hide_index=True)
+
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.2);
+                    border-radius:10px;padding:14px 18px;margin-top:16px;">
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);font-size:.82em;margin:0;line-height:1.7;">
+            <strong style="color:#2ecc85;">No dam advantage:</strong> Traditional dam projects displace communities, 
+            flood ecosystems, and take 5–10 years to build. Run-of-river turbines are operational in 18–24 months, 
+            require no land flooding, and can be fully removed at end of life — leaving the site in its natural state.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── WASTE RECOVERY ────────────────────────────────────────────────────────
+    with sys_tab3:
+        st.markdown("""
+        <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#22c55e;font-size:1.05em;margin:0 0 8px;">Core Concept</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            Every electricity network loses a portion of energy as heat — this is unavoidable under 
+            the laws of thermodynamics. This multi-line recovery network intercepts that wasted 
+            electricity and heat, converts it via an Organic Rankine Cycle unit, and feeds it back 
+            into the grid — producing additional electricity from what the primary systems would 
+            otherwise discard.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:12px;">🔌 The Four-Line System</p>', unsafe_allow_html=True)
+
+        lines = [
+            ("#3b82f6", "First Line — Electricity Supply", "Main supply line delivering power to homes, factories, and consumers. Acts as the source from which recoverable energy is detected and diverted."),
+            ("#22c55e", "Second Line — Wasted Electricity Recovery", "At the junction between lines 1 and 2, an automated door with an ultrasonic mini-calculator detects recoverable energy and opens to divert it. A resistive heater inside converts the collected electricity into stored thermal energy."),
+            ("#f97316", "Third Line — Heat Transfer to ORC", "Transfers heat from the resistive heater to an Organic Rankine Cycle system where it is converted back into usable electricity and returned to the grid."),
+            ("#a855f7", "Multi-Faced Null Line — Leak Recovery", "Inactive until sensors detect voltage leakage anywhere in the network. Activates automatically to route leaked electricity back into the second line, ensuring zero waste from unexpected losses."),
+        ]
+
+        for colour, title, desc in lines:
+            st.markdown(f"""
+            <div style="border-left:3px solid {colour};background:rgba(13,59,46,.25);
+                        border-radius:0 12px 12px 0;padding:14px 18px;margin-bottom:10px;">
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                        color:#f0ede8;font-size:.88em;margin:0 0 4px;">{title}</p>
+              <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.5);
+                        font-size:.8em;margin:0;line-height:1.6;">{desc}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🌡️ Thermal Recovery at Turbines & Generators</p>', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="ib">
+          The largest energy losses in the entire system occur at turbines and industrial generators. 
+          To capture these, <strong style="color:#2ecc85;">ORC Thermal Recovery Lines</strong> are added 
+          directly at points of thermal loss — heat is collected and converted into electricity, then returned 
+          to the Second Line, forming a fully integrated, AI-controlled energy optimisation loop. This means 
+          the biggest source of waste in the system becomes an additional generation source.
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(34,197,94,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">
+                Waste from primary systems
+              </p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5em;
+                        font-weight:700;color:#22c55e;margin:0;">~30%</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">
+                of gross output lost as heat
+              </p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(34,197,94,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">
+                Captured by ORC recovery
+              </p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5em;
+                        font-weight:700;color:#2ecc85;margin:0;">80%</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">
+                of that waste converted back
+              </p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col3:
+            st.markdown("""
+            <div style="background:rgba(13,59,46,.4);border:1px solid rgba(34,197,94,.2);
+                        border-radius:12px;padding:16px;text-align:center;">
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:0 0 6px;">
+                Effective additional output
+              </p>
+              <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5em;
+                        font-weight:700;color:#2ecc85;margin:0;">+24%</p>
+              <p style="font-family:Inter,sans-serif;font-size:.73em;color:rgba(240,237,232,.4);margin:4px 0 0;">
+                from same infrastructure
+              </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🤖 AI Functions</p>', unsafe_allow_html=True)
+
+        ai_waste = [
+            ("Flow Detection", "Interprets real-time data from ultrasonic calculators to identify recoverable energy instantaneously."),
+            ("Energy Conversion", "Determines when to divert electricity to resistive heaters and ORC units based on live grid conditions."),
+            ("Leak Management", "Activates the null line automatically upon detection of voltage leakage anywhere in the network."),
+            ("System Safety", "Monitors second and third lines; shuts them down immediately if abnormal conditions are detected."),
+            ("Energy Optimisation", "Integrates with geothermal and waterfall outputs to balance supply, storage, and demand across the entire grid."),
+            ("Predictive Maintenance", "Anticipates failures, schedules repairs, and ensures continuous operation with minimal downtime."),
+        ]
+
+        for title, desc in ai_waste:
+            st.markdown(f'<div class="ib" style="margin-bottom:8px;"><strong style="color:#22c55e;">{title}:</strong> {desc}</div>', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.2);
+                    border-radius:10px;padding:14px 18px;margin-top:16px;">
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);font-size:.82em;margin:0;line-height:1.7;">
+            <strong style="color:#2ecc85;">Real-world impact:</strong> A 4 MW combined system recovers an additional 
+            0.3–0.5 MW from waste heat. Over a 30-year operational lifetime that represents hundreds of thousands 
+            of MWh of clean electricity produced at zero additional infrastructure cost — free electricity from 
+            what the system was already throwing away.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── DAYLIGHT MIRRORING ────────────────────────────────────────────────────
+    with sys_tab4:
+        st.markdown("""
+        <div style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#eab308;font-size:1.05em;margin:0 0 8px;">Core Concept</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            Polygonal building architecture combined with blur mirrors and AI-controlled shutters 
+            redirects natural sunlight deep into interior spaces, eliminating the need for electrical 
+            lighting during daytime hours entirely. The building shape acts as a natural light amplifier — 
+            each angled surface bounces sunlight further inward, reaching corners that rectangular 
+            buildings leave in shadow. Blur mirrors are used instead of conventional mirrors because 
+            they diffuse light, preventing glare that could distract or harm occupants.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🏗️ System Components</p>', unsafe_allow_html=True)
+            components_list = [
+                ("Blur Mirrors & Polygonal Design", "Mirrors installed along polygonal walls and ceilings. AI calculates optimal reflection paths continuously. Polygonal facets enable multi-directional light reflection reaching even hidden corners."),
+                ("AI-Controlled Shutters", "Multi-speed mechanical, liquid crystal, and micro-louver layers modulate sunlight entry in real time. AI ensures smooth openings and ultra-fast closings, adapting to sun position and cloud cover."),
+                ("Light Sensors", "Monitor illuminance at multiple interior points and feed data to AI for dynamic mirror and shutter adjustment, ensuring uniform brightness throughout the building."),
+                ("Weather Sensors", "Measure sunlight intensity, cloud cover, and temperature. AI predicts sunlight fluctuations and proactively adjusts the system before changes reach the interior."),
+            ]
+            for name, desc in components_list:
+                st.markdown(f"""
+                <div style="background:rgba(13,59,46,.3);border:1px solid rgba(234,179,8,.15);
+                            border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+                  <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                            color:#eab308;font-size:.82em;margin:0 0 3px;">{name}</p>
+                  <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.5);
+                            font-size:.78em;margin:0;line-height:1.6;">{desc}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">📦 Materials & Specifications</p>', unsafe_allow_html=True)
+
+            mat_df = pd.DataFrame({
+                "Component": ["Mirrors", "Shutters", "Sensor Casings", "AI Control Unit"],
+                "Material / Specification": [
+                    "Blur-coated glass or polymer",
+                    "Mechanical louvers, LC layers, micro-louvers",
+                    "Weatherproof polymer or stainless steel",
+                    "Embedded processor or small computer",
+                ],
+            })
+            st.dataframe(mat_df, use_container_width=True, hide_index=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🌍 Impact Stats</p>', unsafe_allow_html=True)
+            impacts = [
+                ("15%", "of global electricity consumed by artificial lighting — eliminated during daylight hours"),
+                ("40%+", "of electricity in tropical commercial buildings can be lighting — biggest single saving"),
+                ("Healthier", "Natural light improves student performance, patient recovery, and worker productivity"),
+                ("Zero cost", "Once installed, daylight mirroring produces its saving at no ongoing energy cost"),
+                ("Replicable", "Works in homes, schools, clinics, factories, offices — the model scales everywhere"),
+            ]
+            for stat, desc in impacts:
+                st.markdown(f"""
+                <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+                  <div style="background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);
+                              border-radius:7px;padding:4px 9px;white-space:nowrap;">
+                    <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                                 color:#eab308;font-size:.82em;">{stat}</span>
+                  </div>
+                  <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.5);
+                            font-size:.78em;margin:0;line-height:1.6;">{desc}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.9em;margin-bottom:10px;">🤖 AI Functionality</p>', unsafe_allow_html=True)
+
+        ai_day = [
+            ("Optimal Reflection Paths", "Calculates best angles for polygonal mirrors to direct sunlight efficiently to every part of the interior."),
+            ("Real-Time Shutter Control", "Maintains consistent indoor brightness by opening and closing shutters dynamically as sun position and cloud cover change."),
+            ("Seasonal & Geographic Adjustment", "Accounts for seasonal changes in sun angle and building orientation to maintain performance year-round."),
+            ("Emergency & Manual Override", "Fully automated but allows human intervention at any time if needed."),
+            ("Energy Optimisation", "Minimises electricity usage while maximising natural light capture across the full building."),
+        ]
+        for title, desc in ai_day:
+            st.markdown(f'<div class="ib" style="margin-bottom:8px;"><strong style="color:#eab308;">{title}:</strong> {desc}</div>', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.2);
+                    border-radius:10px;padding:14px 18px;margin-top:16px;">
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);font-size:.82em;margin:0;line-height:1.7;">
+            <strong style="color:#2ecc85;">The key insight:</strong> It is always cheaper and more efficient 
+            to not use energy than to generate it. A community that reduces building energy demand by 20% 
+            through daylight mirroring effectively gets 20% more capacity from its generation infrastructure 
+            at no additional cost — the same plant now serves more households.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── INTEGRATED CENTER ─────────────────────────────────────────────────────
+    with sys_tab5:
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#2ecc85;font-size:1.05em;margin:0 0 8px;">The Integrated Vision</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            The Renewable Energy Generation Center brings all four technologies together into a single 
+            AI-managed ecosystem. Each system feeds into the others — geothermal provides the baseload, 
+            waterfall handles seasonal peaks, waste recovery captures what both systems lose, and daylight 
+            mirroring reduces what the community needs in the first place. The result is a self-optimising 
+            energy loop that maximises output while minimising waste.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.95em;margin-bottom:14px;">🏭 Center Sections</p>', unsafe_allow_html=True)
+
+        sections = [
+            ("#f97316", "1", "Geothermal Energy Section", "Harvests heat from deep underground reservoirs and converts it to electricity using the dual-loop system. AI monitors temperature, pressure, and turbine performance in real time, adjusting fluid flow to maintain peak output continuously."),
+            ("#22c55e", "2", "Wasted Electricity Recovery Section", "Captures energy that would otherwise be lost in electrical grids, converting it to heat and subsequently to electricity via ORC. AI actively monitors energy flow, predicts leaks, and dynamically adjusts recovery operations across the entire distribution network."),
+            ("#3b82f6", "3", "Mountain-Attached Waterfall Turbine Section", "Converts the kinetic energy of waterfalls into electricity without obstructing natural water flow. Adjustable AI-managed turbines and real-time control ensure maximum efficiency and safety under all seasonal and weather conditions."),
+            ("#eab308", "4", "Nationwide Distribution Hub", "All electricity generated from the three primary sections is collected and stored here. This section is intelligently linked to the wasted electricity recovery system, enabling the capture and reuse of any losses during distribution — creating a self-optimising, highly efficient energy loop."),
+        ]
+
+        for colour, num, title, desc in sections:
+            st.markdown(f"""
+            <div style="display:flex;gap:16px;align-items:flex-start;
+                        background:rgba(13,59,46,.25);border:1px solid {colour}33;
+                        border-left:3px solid {colour};
+                        border-radius:0 14px 14px 0;padding:16px 20px;margin-bottom:12px;">
+              <div style="background:{colour};color:#061a11;width:32px;height:32px;min-width:32px;
+                          border-radius:50%;display:flex;align-items:center;justify-content:center;
+                          font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:.9em;">
+                {num}
+              </div>
+              <div>
+                <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                          color:#f0ede8;font-size:.9em;margin:0 0 5px;">{title}</p>
+                <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.5);
+                          font-size:.8em;margin:0;line-height:1.6;">{desc}</p>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.95em;margin-bottom:14px;">☀️ Smart Daylight-Mirroring in the Center</p>', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="ib">
+          The center itself adopts the Smart Daylight-Mirroring Polygonal Building design — 
+          demonstrating the technology in the very facility that generates the electricity. 
+          Polygonal walls and ceilings reflect sunlight deep into interior spaces. Blur mirrors 
+          diffuse light and prevent glare. AI-controlled shutters and sensors continuously adjust 
+          mirror angles and sunlight entry. This makes the center a <strong style="color:#2ecc85;">
+          living model</strong> for how factories, homes, and offices can implement smart daylighting — 
+          proving the concept works at scale before it reaches the community.
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<p style="font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:700;color:#f0ede8;font-size:.95em;margin-bottom:14px;">✅ Efficiency Summary</p>', unsafe_allow_html=True)
+
+        efficiency_points = [
+            ("Full resource utilisation", "Geothermal heat, waterfall kinetic energy, sunlight, and recovered waste are all fully captured"),
+            ("AI-driven optimisation", "Human monitoring combined with AI automation means almost no energy is wasted at any stage"),
+            ("Predictive maintenance", "Reduces downtime across all four systems, keeping the entire center continuously operational"),
+            ("Demand reduction", "Smart building design ensures energy savings at every stage, stretching generation capacity further"),
+            ("Self-optimising loop", "All systems feed into each other — waste from one becomes input for another"),
+        ]
+
+        for title, desc in efficiency_points:
+            st.markdown(f"""
+            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+              <span style="color:#2ecc85;font-size:1em;margin-top:1px;">✓</span>
+              <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);font-size:.83em;margin:0;line-height:1.6;">
+                <strong style="color:#f0ede8;">{title}:</strong> {desc}
+              </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ── SDG ALIGNMENT ─────────────────────────────────────────────────────────
+    with sys_tab6:
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.07);border:1px solid rgba(46,204,133,.25);
+                    border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#2ecc85;font-size:1.05em;margin:0 0 8px;">SDG Alignment Overview</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.7);
+                    font-size:.88em;line-height:1.7;margin:0;">
+            The EcoGrid system is designed not only for technological efficiency but to directly advance 
+            global sustainability objectives. Each of the four technologies contributes to multiple UN 
+            Sustainable Development Goals, creating a holistic model of sustainable innovation that 
+            addresses energy, climate, health, education, and economic development simultaneously.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        sdgs = [
+            ("#f59e0b", "SDG 7", "Affordable and Clean Energy",
+             "Produces clean, renewable electricity from geothermal heat, waterfalls, and recovered wasted energy. AI ensures maximum efficiency by balancing production with demand and minimising losses.",
+             ["Consistent low-carbon energy for households and industries", "A 50m waterfall turbine section alone can power over 5,370 families annually", "Smart daylighting reduces reliance on electrical lighting entirely"]),
+
+            ("#6366f1", "SDG 9", "Industry, Innovation and Infrastructure",
+             "Represents a cutting-edge infrastructure model integrating AI, smart energy recovery, and adaptive building design.",
+             ["AI-driven optimisation, predictive maintenance, and smart lighting", "Serves as a living lab for clean energy technologies and sustainable urban planning", "Scalable renewable solutions for national grids without disrupting ecosystems"]),
+
+            ("#10b981", "SDG 11", "Sustainable Cities and Communities",
+             "Smart daylight-mirroring polygonal buildings reduce energy consumption while improving indoor environmental quality.",
+             ["Replicable in homes, factories, and offices", "Creates safe, energy-efficient community spaces", "Reduces urban energy costs, promoting livable future-ready cities"]),
+
+            ("#ef4444", "SDG 13", "Climate Action",
+             "Replaces fossil-fuel electricity with geothermal and hydro-kinetic power, recovering wasted energy to reduce greenhouse gas emissions.",
+             ["Mitigates climate change by cutting CO₂ from conventional generation", "AI ensures optimal operation, avoiding energy waste", "Quantified carbon savings unlock international climate finance"]),
+
+            ("#8b5cf6", "SDG 12", "Responsible Consumption and Production",
+             "The wasted electricity recovery system ensures that energy is used responsibly, recycling losses that conventional systems discard.",
+             ["Recycles energy lost in industrial systems via ORC technology", "Promotes efficient materials use with long-life alloys and modular components", "Closed-loop design means nothing is wasted"]),
+
+            ("#22c55e", "SDG 15", "Life on Land",
+             "Mountain-attached waterfall turbines generate power without blocking water flows or harming ecosystems.",
+             ["Maintains river and mountain ecosystems while harnessing kinetic energy", "Supports biodiversity by minimising environmental disruption", "No land flooding, no permanent alteration of natural waterways"]),
+
+            ("#0ea5e9", "SDG 17", "Partnerships for the Goals",
+             "Demonstrates interdisciplinary and international collaboration through AI, engineering, and sustainable architecture integration.",
+             ["Model for governments, universities, and industries to collaborate", "Encourages knowledge-sharing and technology transfer globally", "Open toolkit approach enables replication across regions"]),
+        ]
+
+        for colour, code, name, contribution, impacts in sdgs:
+            impacts_html = "".join([
+                f'<p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.5);font-size:.78em;margin:3px 0;line-height:1.5;">• {i}</p>'
+                for i in impacts
+            ])
+            st.markdown(f"""
+            <div style="background:rgba(13,59,46,.25);border:1px solid {colour}33;
+                        border-left:3px solid {colour};border-radius:0 14px 14px 0;
+                        padding:16px 20px;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+                <span style="background:{colour}22;border:1px solid {colour}55;color:{colour};
+                             border-radius:7px;padding:4px 12px;font-family:'Plus Jakarta Sans',sans-serif;
+                             font-weight:700;font-size:.82em;">{code}</span>
+                <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                          color:#f0ede8;font-size:.9em;margin:0;">{name}</p>
+              </div>
+              <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);
+                        font-size:.82em;margin:0 0 8px;line-height:1.6;">{contribution}</p>
+              {impacts_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="background:rgba(46,204,133,.08);border:1px solid rgba(46,204,133,.25);
+                    border-radius:14px;padding:20px 24px;margin-top:8px;text-align:center;">
+          <p style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+                    color:#2ecc85;font-size:1em;margin:0 0 8px;">The Bottom Line</p>
+          <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.6);
+                    font-size:.85em;line-height:1.7;margin:0;">
+            This integrated system does more than generate electricity — it models a sustainable, 
+            AI-optimised ecosystem that ensures clean energy access, reduces carbon footprint, 
+            preserves natural ecosystems, and demonstrates how technology and AI can align with 
+            global sustainability goals. The EcoGrid Renewable Energy Center is the SDGs in action.
+          </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FOOTER
