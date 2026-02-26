@@ -396,6 +396,11 @@ with t2:
          "gets":["Anomaly detection","AI diagnosis & confidence score","Recovery recommendations","Usage trend chart"],
          "tip":"Works independently — no need to run the Calculator first",
          "unlocks":"Actionable efficiency recommendations"},
+        {"num":"06","icon":"🔬","title":"System Design","tab":"Tab 6","color":"#a855f7",
+         "what":"Explore the science & engineering behind every EcoGrid technology",
+         "gets":["Geothermal deep-drill design","Waterfall turbine specs","Waste recovery ORC system","Daylight mirroring architecture","SDG alignment","Traditional vs EcoGrid comparisons"],
+         "tip":"No inputs needed — read through at any time for a full technical deep-dive",
+         "unlocks":"Full understanding of how and why EcoGrid works"},
     ]
 
     for s in STEPS:
