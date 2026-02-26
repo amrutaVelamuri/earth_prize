@@ -1840,6 +1840,13 @@ with t6:
         """, unsafe_allow_html=True)
 
         sdgs = [
+            ("#22d3ee", "SDG 1", "No Poverty",
+             "Expanding access to affordable renewable electricity directly reduces energy poverty, lowers household costs, and creates green jobs — strengthening local economies and reducing dependence on expensive fossil fuel imports.",
+             ["Reduces energy poverty by increasing access to reliable and affordable renewable electricity",
+              "Lowers household energy costs through low-operating-cost geothermal and hydro systems",
+              "Creates green jobs in installation, maintenance, and AI-based energy management",
+              "Supports small businesses and local economies by ensuring stable power supply",
+              "Improves economic resilience by reducing dependence on costly fossil fuel imports"]),
             ("#f59e0b", "SDG 7", "Affordable and Clean Energy",
              "Produces clean, renewable electricity from geothermal heat, waterfalls, and recovered wasted energy. AI ensures maximum efficiency by balancing production with demand and minimising losses.",
              ["Consistent low-carbon energy for households and industries", "A 50m waterfall turbine section alone can power over 5,370 families annually", "Smart daylighting reduces reliance on electrical lighting entirely"]),
