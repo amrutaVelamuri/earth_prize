@@ -1910,7 +1910,7 @@ with t6:
                     color:#f0ede8;font-size:1em;margin:0 0 6px;">Want to go deeper?</p>
           <p style="font-family:Inter,sans-serif;color:rgba(240,237,232,.45);
                     font-size:.82em;margin:0 0 16px;">
-            Download the full 32-page technical design document covering every system in detail.
+            Download the full 31-page technical design document covering every system in detail.
           </p>
         </div>
         """, unsafe_allow_html=True)
